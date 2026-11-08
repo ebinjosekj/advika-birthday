@@ -1,5 +1,6 @@
 import { eventConfig } from '../../config/eventConfig';
 import { Chapter } from '../ui/Chapter';
+import { NextChapter } from '../ui/NextChapter';
 
 const SWATCHES = [
   { name: 'Lavender', c: '#cbb8ea' },
@@ -30,6 +31,7 @@ export function DressCode() {
         <p className="lede" style={{ margin: 0 }}>
           Come dressed in your favourite pastel shades!
         </p>
+        <NextChapter from="dress-code" />
       </div>
     </Chapter>
   );

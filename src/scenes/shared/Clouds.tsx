@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useAssetTexture } from './assets';
 import { globalUniforms } from './uniforms';
 import { mulberry32 } from '../../utils/random';
+import { useMagic } from '../../app/store';
 
 interface CloudLayerProps {
   count: number;
@@ -61,10 +62,12 @@ export function CloudLayer({ count, seed, center, spread, size, speed, opacity =
         uSpanX: { value: spread[0] },
         uCenterX: { value: center[0] },
         uOpacity: { value: opacity },
+        // phones: puffs thin out sooner as the camera nears them — far less overdraw while flying through
+        uNear: { value: useMagic.getState().quality === 'low' ? 1.7 : 1 },
       },
       vertexShader: /* glsl */ `
         attribute vec3 aOffset; attribute float aScale; attribute float aRot; attribute float aShade;
-        uniform float uTime; uniform float uSpeed; uniform float uSpanX; uniform float uCenterX;
+        uniform float uTime; uniform float uSpeed; uniform float uSpanX; uniform float uCenterX; uniform float uNear;
         varying vec2 vUv; varying float vShade; varying float vFade; varying float vH;
         void main(){
           vUv = uv; vShade = aShade;
@@ -77,12 +80,14 @@ export function CloudLayer({ count, seed, center, spread, size, speed, opacity =
           p.y *= 0.62;
           mv.xy += p;
           float dist = -mv.z;
-          vFade = smoothstep(aScale*0.15, aScale*0.9, dist) * (1.0 - smoothstep(520.0, 760.0, dist));
+          vFade = smoothstep(aScale*0.15*uNear, aScale*0.9*uNear, dist) * (1.0 - smoothstep(520.0, 760.0, dist));
           // edge fade at the wrap seam so puffs never pop
           float edge = abs(o.x - uCenterX) / (uSpanX*0.5);
           vFade *= 1.0 - smoothstep(0.82, 1.0, edge);
           vH = position.y + 0.5;
           gl_Position = projectionMatrix * mv;
+          // fully faded puffs are collapsed so they cost no pixels at all
+          if (vFade < 0.003) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         }`,
       fragmentShader: /* glsl */ `
         uniform sampler2D uTex; uniform float uMood; uniform float uOpacity;

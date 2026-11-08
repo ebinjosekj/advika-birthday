@@ -54,7 +54,7 @@ export function submitRsvp(record: RsvpRecord): Promise<SubmitResult> {
         });
         if (error) {
           if (error.code === '23505') return { ok: true, demo: false, duplicate: true };
-          return { ok: false, demo: false, error: 'We couldn’t save your RSVP. Please try again, or call or text us.' };
+          return { ok: false, demo: false, error: 'We couldn’t save your RSVP. Please try again, or call us using the numbers below.' };
         }
       } else {
         await wait(900);

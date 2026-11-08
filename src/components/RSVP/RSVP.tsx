@@ -1,13 +1,15 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { Loader2, MessageCircle, Minus, Phone, Plus, Send } from 'lucide-react';
+import { CheckCircle2, Loader2, Minus, Phone, Plus, Send } from 'lucide-react';
 import { eventConfig } from '../../config/eventConfig';
 import { hasErrors, validateRsvp, type RsvpErrors, type RsvpInput } from '../../utils/validation';
 import { previousSubmission, submitRsvp, toRecord } from '../../services/rsvpService';
 import { backendMode, newClientId } from '../../services/backend';
-import { smsUrl, telUrl, whatsappUrl } from '../../utils/links';
+import { telUrl } from '../../utils/links';
+import { TransitionManager } from '../../animations/sectionTransitions/TransitionManager';
 import { emitBurst } from '../../animations/particleEffects/bursts';
 import { audio } from '../../services/audioEngine';
 import { Chapter } from '../ui/Chapter';
+import { NextChapter } from '../ui/NextChapter';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -45,6 +47,14 @@ export function RsvpForm() {
       setStatus('success');
       setResult({ attending: rec.attending, demo: res.demo });
       emitBurst([16, 12, -80], rec.attending ? '#ffe2a6' : '#cfe0ff', 300, 7);
+      // the form collapses into a short thank-you card: bring that card into view
+      // (otherwise the page shifts and the guest is left looking at the next chapter)
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          TransitionManager.scrollTo('rsvp');
+          document.querySelector<HTMLElement>('[data-testid=rsvp-success]')?.focus({ preventScroll: true });
+        }),
+      );
       audio.play(rec.attending ? 'reveal' : 'chime');
     } else {
       setStatus('error');
@@ -54,7 +64,8 @@ export function RsvpForm() {
 
   if (status === 'success' && result) {
     return (
-      <div role="status" data-testid="rsvp-success" style={{ padding: '6px 0' }}>
+      <div role="status" data-testid="rsvp-success" className="rsvp-success" tabIndex={-1}>
+        <CheckCircle2 className="rsvp-success-icon" size={34} aria-hidden="true" />
         <p className="display" style={{ fontSize: '2rem', margin: '0 0 8px' }}>
           {result.attending ? eventConfig.messages.attendingYes : eventConfig.messages.attendingNo}
         </p>
@@ -169,27 +180,22 @@ export function RSVP() {
           Will You Join Our Magical Celebration?
         </h2>
         <RsvpForm />
-        <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,.14)' }}>
+        <div className="rsvp-contact">
           <p className="fine" style={{ margin: '0 0 10px' }}>
-            Prefer to call or message?
+            Questions? Call us
           </p>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 10 }}>
+          <ul>
             {eventConfig.contacts.map((c) => (
-              <li key={c.e164} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontWeight: 600, minWidth: 118 }}>{c.display}</span>
-                <a className="btn btn-ghost" style={{ minHeight: 44, padding: '0.6em 1em' }} href={telUrl(c.e164)} aria-label={`Call ${c.display}`} data-testid="tel-link">
-                  <Phone size={16} aria-hidden="true" /> Call
-                </a>
-                <a className="btn btn-ghost" style={{ minHeight: 44, padding: '0.6em 1em' }} href={whatsappUrl(c.e164)} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${c.display}`} data-testid="whatsapp-link">
-                  <MessageCircle size={16} aria-hidden="true" /> WhatsApp
-                </a>
-                <a className="btn btn-ghost" style={{ minHeight: 44, padding: '0.6em 1em' }} href={smsUrl(c.e164)} aria-label={`Text ${c.display}`} data-testid="sms-link">
-                  Text
+              <li key={c.e164}>
+                <a className="call-pill" href={telUrl(c.e164)} aria-label={`Call ${c.display}`} data-testid="tel-link">
+                  <Phone size={16} aria-hidden="true" />
+                  <span>{c.display}</span>
                 </a>
               </li>
             ))}
           </ul>
         </div>
+        <NextChapter from="rsvp" />
       </div>
     </Chapter>
   );

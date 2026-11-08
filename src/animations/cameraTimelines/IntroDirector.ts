@@ -32,8 +32,8 @@ class IntroDirectorImpl {
     }
     this.tl = gsap.timeline({ defaults: { ease: 'sine.inOut' } });
     this.tl.timeScale(this.speed);
-    this.tl.to(intro, { cam: 0.17, duration: 3.6, ease: 'power3.out' });
-    this.tl.call(() => useMagic.getState().setPhase('book'), [], 1.9);
+    this.tl.to(intro, { cam: 0.17, duration: 3, ease: 'power3.out' });
+    this.tl.call(() => useMagic.getState().setPhase('book'), [], 1.4);
   }
 
   openBook() {

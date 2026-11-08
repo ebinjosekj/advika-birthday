@@ -5,6 +5,7 @@ import { Chapter } from '../ui/Chapter';
 import { CalendarArt, ClockArt, FabricArt, MapArt } from '../ui/Icons';
 import { go } from '../Navigation/Nav';
 import type { ReactNode } from 'react';
+import { NextChapter } from '../ui/NextChapter';
 
 interface DetailProps {
   k: string;
@@ -61,6 +62,7 @@ export function PartyDetails() {
             onClick={() => go('location')}
           />
         </div>
+        <NextChapter from="details" />
       </div>
     </Chapter>
   );

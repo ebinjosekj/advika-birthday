@@ -5,6 +5,7 @@ import { copyText, mapsUrl } from '../../utils/links';
 import { downloadICS } from '../../utils/ics';
 import { useMagic } from '../../app/store';
 import { Chapter } from '../ui/Chapter';
+import { NextChapter } from '../ui/NextChapter';
 
 export function Location() {
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
@@ -50,6 +51,7 @@ export function Location() {
         <p className="fine" style={{ margin: '16px 0 0' }}>
           The calendar entry starts {eventConfig.dateLabel} at {eventConfig.timeLabel}.
         </p>
+        <NextChapter from="location" />
       </div>
     </Chapter>
   );

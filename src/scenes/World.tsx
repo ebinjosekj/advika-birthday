@@ -360,7 +360,7 @@ function Warmup({ onReady }: { onReady?: () => void }) {
       ready.current?.();
     };
     // never hold the opening back for a slow shader compiler
-    const guard = setTimeout(fire, 9000);
+    const guard = setTimeout(fire, 7000);
     (async () => {
       await frame();
       try {
@@ -376,29 +376,21 @@ function Warmup({ onReady }: { onReady?: () => void }) {
       } catch {
         /* fall back to lazy compile */
       }
-      // Pre-draw the whole journey from every viewpoint the story visits, behind the
-      // night-sky backdrop. Mobile GPUs upload meshes and finish linking shaders on
-      // first *draw*, not on compile — doing it here is what stops the fairy's flight
-      // from hitching when a new island swings into view.
+      // Pre-draw only the opening shots (sky → book) so the book appears without
+      // a hitch. The rest of the journey is pre-drawn later, while the guest is
+      // looking at the book (see <JourneyWarmup/>), instead of delaying the start.
       try {
-        const probe = new THREE.PerspectiveCamera(80, (camera as THREE.PerspectiveCamera).aspect || 1, 0.1, 2000);
-        const shots: [readonly number[], readonly number[]][] = [
-          ...INTRO_PATH.pos.map((p, i) => [p, INTRO_PATH.look[i]] as [readonly number[], readonly number[]]),
-          ...STATIONS.map((st) => [st.pos, st.look] as [readonly number[], readonly number[]]),
-        ];
-        for (let i = 0; i < shots.length; i++) {
+        const probe = makeProbe(camera);
+        for (let i = 0; i < OPENING_SHOTS; i++) {
           if (cancelled || fired) break;
-          const [p, l] = shots[i];
-          probe.position.set(p[0], p[1], p[2]);
-          probe.lookAt(l[0], l[1], l[2]);
-          probe.updateMatrixWorld();
+          aimProbe(probe, i);
           gl.render(scene, probe);
-          if (i % 3 === 2) await frame();
+          await frame();
         }
       } catch {
         /* purely an optimisation */
       }
-      for (let i = 0; i < 3; i++) await frame();
+      for (let i = 0; i < 2; i++) await frame();
       fire();
     })();
     return () => {
@@ -406,6 +398,48 @@ function Warmup({ onReady }: { onReady?: () => void }) {
       clearTimeout(guard);
     };
   }, [gl, scene, camera]);
+  return null;
+}
+
+// Every viewpoint the story visits: the intro flight, then each chapter's station.
+const SHOTS: [readonly number[], readonly number[]][] = [
+  ...INTRO_PATH.pos.map((p, i) => [p, INTRO_PATH.look[i]] as [readonly number[], readonly number[]]),
+  ...STATIONS.map((st) => [st.pos, st.look] as [readonly number[], readonly number[]]),
+];
+const OPENING_SHOTS = 3;
+
+function makeProbe(camera: THREE.Camera) {
+  return new THREE.PerspectiveCamera(80, (camera as THREE.PerspectiveCamera).aspect || 1, 0.1, 2000);
+}
+function aimProbe(probe: THREE.PerspectiveCamera, i: number) {
+  const [p, l] = SHOTS[i];
+  probe.position.set(p[0], p[1], p[2]);
+  probe.lookAt(l[0], l[1], l[2]);
+  probe.updateMatrixWorld();
+}
+
+/**
+ * Mobile GPUs upload meshes and finish linking shaders on first *draw*. While the
+ * guest reads the book (the camera is nearly still), quietly draw the rest of the
+ * journey from each viewpoint, one every few frames, so the fairy's flight and the
+ * chapters never hitch on something seen for the first time.
+ */
+function JourneyWarmup() {
+  const next = useRef(OPENING_SHOTS);
+  const tick = useRef(0);
+  const probe = useRef<THREE.PerspectiveCamera | null>(null);
+  useFrame(({ gl, scene, camera }) => {
+    if (next.current >= SHOTS.length) return;
+    const phase = useMagic.getState().phase;
+    // still moments only: the book waiting for a tap, and the castle-door reveal;
+    // after a skipped intro, finish the chapter viewpoints slowly in the background
+    const every = phase === 'book' || phase === 'reveal' ? 3 : phase === 'main' ? 8 : 0;
+    if (!every || ++tick.current % every !== 0) return;
+    if (phase === 'main' && next.current < INTRO_PATH.pos.length) next.current = INTRO_PATH.pos.length;
+    probe.current ??= makeProbe(camera);
+    aimProbe(probe.current, next.current++);
+    gl.render(scene, probe.current);
+  });
   return null;
 }
 
@@ -466,6 +500,7 @@ export default function World({ onReady }: { onReady?: () => void }) {
       }}
     >
       <DprGovernor />
+      <JourneyWarmup />
       <Suspense fallback={null}>
         <Lighting q={q} />
         <Kingdom q={q} />

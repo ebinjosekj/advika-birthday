@@ -50,6 +50,7 @@ test.describe('D · functionality', () => {
       }).observe(btn, { childList: true, subtree: true, characterData: true, attributes: true });
     });
     await form.getByTestId('rsvp-submit').click();
+    await expect(page.getByTestId('rsvp-success')).toBeInViewport({ timeout: 15_000 }); // the thank-you card is brought into view
     await expect(page.getByTestId('rsvp-success')).toContainText('Yay! Your magical adventure awaits!');
     await expect(page.getByTestId('rsvp-success')).toContainText('local demo');
     expect(await page.evaluate(() => (window as unknown as { __loading?: boolean }).__loading)).toBe(true);
@@ -82,16 +83,12 @@ test.describe('D · functionality', () => {
     await expect(form.getByLabel('Your name')).toHaveValue('Lee');
   });
 
-  test('phone, WhatsApp and SMS links are correct', async ({ page }) => {
+  test('call links dial the right numbers', async ({ page }) => {
     await openMain(page);
     const tel = page.getByTestId('tel-link');
+    await expect(tel).toHaveCount(2);
     await expect(tel.nth(0)).toHaveAttribute('href', 'tel:+15483332347');
     await expect(tel.nth(1)).toHaveAttribute('href', 'tel:+15483332348');
-    const wa = page.getByTestId('whatsapp-link');
-    await expect(wa.nth(0)).toHaveAttribute('href', /^https:\/\/wa\.me\/15483332347\?text=/);
-    await expect(wa.nth(1)).toHaveAttribute('href', /^https:\/\/wa\.me\/15483332348\?text=/);
-    await expect(wa.nth(0)).toHaveAttribute('target', '_blank');
-    await expect(page.getByTestId('sms-link').nth(0)).toHaveAttribute('href', /^sms:\+15483332347/);
   });
 
   test('Google Maps opens the correct destination in a new tab', async ({ page }) => {

@@ -4,6 +4,7 @@ import { useCountdown } from '../../hooks/useCountdown';
 import { formatInZone, pad2, visitorTimeZone } from '../../utils/countdown';
 import { Chapter } from '../ui/Chapter';
 import { useMagic } from '../../app/store';
+import { NextChapter } from '../ui/NextChapter';
 
 const TARGET = new Date(eventConfig.startISO).getTime();
 
@@ -70,6 +71,7 @@ export function Countdown() {
             </>
           )}
         </p>
+        <NextChapter from="countdown" />
       </div>
     </Chapter>
   );

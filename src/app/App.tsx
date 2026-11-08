@@ -28,6 +28,26 @@ export default function App() {
   const [worldFailed, setWorldFailed] = useState(false);
   const main = phase === 'main';
 
+  // mark the page "idle" after a short pause in scrolling: the next-chapter chevrons
+  // then bob gently, so guests notice the story continues below
+  useEffect(() => {
+    if (!main) return;
+    const root = document.documentElement;
+    let t: ReturnType<typeof setTimeout>;
+    const arm = () => {
+      root.classList.remove('scroll-idle');
+      clearTimeout(t);
+      t = setTimeout(() => root.classList.add('scroll-idle'), 2200);
+    };
+    arm();
+    window.addEventListener('scroll', arm, { passive: true });
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('scroll', arm);
+      root.classList.remove('scroll-idle');
+    };
+  }, [main]);
+
   useEffect(() => {
     let alive = true;
     const done = () => alive && setFontsReady(true);

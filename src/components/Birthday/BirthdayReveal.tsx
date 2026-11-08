@@ -2,6 +2,7 @@ import { Flame } from 'lucide-react';
 import { Chapter } from '../ui/Chapter';
 import { surprises } from '../Transitions/surprises';
 import { Portrait } from '../ui/Portrait';
+import { NextChapter } from '../ui/NextChapter';
 
 export function BirthdayReveal() {
   return (
@@ -20,6 +21,7 @@ export function BirthdayReveal() {
         <button type="button" className="btn btn-primary" onClick={surprises.cake} data-testid="light-candles">
           <Flame size={18} aria-hidden="true" /> Light the candles
         </button>
+        <NextChapter from="birthday" />
       </div>
     </Chapter>
   );
