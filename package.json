@@ -7,6 +7,7 @@
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview --port 4173",
+    "build:pages": "tsc -p tsconfig.json --noEmit && cross-env PAGES_BASE=/advika-birthday/ vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test"
@@ -39,6 +40,7 @@
     "@types/react-dom": "^19.3.0",
     "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^6.2.1",
+    "cross-env": "^10.1.0",
     "jsdom": "^31.0.0",
     "pngjs": "^7.0.0",
     "tailwindcss": "^4.3.5",
