@@ -40,20 +40,4 @@ export function validateRsvp(input: RsvpInput): RsvpErrors {
   return errors;
 }
 
-export interface WishInput {
-  name: string;
-  message: string;
-}
-export type WishErrors = Partial<Record<'name' | 'message', string>>;
-
-export function validateWish(input: WishInput): WishErrors {
-  const errors: WishErrors = {};
-  const msg = cleanText(input.message);
-  if (msg.length < L.wishMin) errors.message = `Write a wish of at least ${L.wishMin} characters.`;
-  else if (msg.length > L.wishMax) errors.message = `Wishes can be up to ${L.wishMax} characters.`;
-  const name = cleanText(input.name);
-  if (name.length > L.wishNameMax) errors.name = `Please keep your name under ${L.wishNameMax} characters.`;
-  return errors;
-}
-
 export const hasErrors = (e: object) => Object.keys(e).length > 0;

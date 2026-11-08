@@ -59,9 +59,6 @@ export const eventConfig = {
     maxAttendees: 10,
     nameMax: 80,
     rsvpMessageMax: 300,
-    wishMin: 3,
-    wishMax: 140,
-    wishNameMax: 40,
   },
 } as const;
 

@@ -4,15 +4,16 @@ import * as THREE from 'three';
 import { roofTexture, stoneTexture } from '../shared/textures';
 import { globalUniforms } from '../shared/uniforms';
 import { world } from '../../app/store';
+import { useAssetTexture } from '../shared/assets';
 
-const GOLD = '#d9b56c';
+const GOLD = '#b8955a';
 
 function useStone(repeat: [number, number]) {
   return useMemo(() => {
     const t = stoneTexture().clone();
     t.needsUpdate = true;
     t.repeat.set(repeat[0], repeat[1]);
-    return new THREE.MeshStandardMaterial({ map: t, bumpMap: t, bumpScale: 0.6, roughness: 0.82, color: '#fff7ee' });
+    return new THREE.MeshStandardMaterial({ map: t, bumpMap: t, bumpScale: 1.2, roughness: 0.9, color: '#e9dfd2', envMapIntensity: 0.7 });
   }, [repeat]);
 }
 
@@ -57,13 +58,14 @@ function Banner({ position, color, rotationY = 0 }: { position: [number, number,
 }
 
 function Tower({ position, radius, height, roofColor, roofHeight }: { position: [number, number, number]; radius: number; height: number; roofColor: string; roofHeight: number }) {
+  const tiles = useAssetTexture('nTiles', { repeat: 6 });
   const stone = useStone([Math.round(radius * 2.2), Math.round(height / 4)]);
   const roof = useMemo(() => {
     const t = roofTexture(roofColor).clone();
     t.needsUpdate = true;
     t.repeat.set(3, 3);
-    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.55, metalness: 0.05 });
-  }, [roofColor]);
+    return new THREE.MeshStandardMaterial({ map: t, roughness: 0.62, metalness: 0.05, normalMap: tiles, normalScale: new THREE.Vector2(0.8, 0.8) });
+  }, [roofColor, tiles]);
   return (
     <group position={position}>
       <mesh material={stone} position={[0, height / 2, 0]} castShadow receiveShadow>
@@ -148,7 +150,7 @@ function Gate() {
   const glow = useRef<THREE.MeshBasicMaterial>(null);
   const light = useRef<THREE.PointLight>(null);
   const archGeo = useMemo(() => arch(4.8, 6.6), []);
-  const wood = useMemo(() => new THREE.MeshStandardMaterial({ color: '#9c7486', roughness: 0.7 }), []);
+  const wood = useMemo(() => new THREE.MeshStandardMaterial({ color: '#6a4e3e', roughness: 0.8 }), []);
   useFrame(() => {
     const d = world.intro.doors;
     if (left.current) left.current.rotation.y = -d * 1.75;
@@ -232,25 +234,25 @@ export function Castle({ position }: { position: [number, number, number] }) {
       <Merlons width={9} depth={9} y={11.5} z={11.5} />
       <Gate />
       {/* towers */}
-      <Tower position={[-12, 0, 8]} radius={3.2} height={20} roofColor="#c9b6e8" roofHeight={9} />
-      <Tower position={[12, 0, 8]} radius={3.2} height={20} roofColor="#c9b6e8" roofHeight={9} />
-      <Tower position={[-12, 0, -8]} radius={3.4} height={24} roofColor="#e6a9b8" roofHeight={10} />
-      <Tower position={[12, 0, -8]} radius={3.4} height={24} roofColor="#e6a9b8" roofHeight={10} />
-      <Tower position={[0, 15, -1]} radius={4.5} height={14} roofColor="#b6a0dd" roofHeight={14} />
-      <Tower position={[-5.6, 0, 13.6]} radius={1.6} height={15} roofColor="#e6a9b8" roofHeight={6} />
-      <Tower position={[5.6, 0, 13.6]} radius={1.6} height={15} roofColor="#e6a9b8" roofHeight={6} />
-      <Tower position={[-7, 15, -4]} radius={1.3} height={8} roofColor="#a9c6e3" roofHeight={5} />
-      <Tower position={[7, 15, -4]} radius={1.3} height={8} roofColor="#a9c6e3" roofHeight={5} />
+      <Tower position={[-12, 0, 8]} radius={3.2} height={20} roofColor="#7f7a9c" roofHeight={9} />
+      <Tower position={[12, 0, 8]} radius={3.2} height={20} roofColor="#7f7a9c" roofHeight={9} />
+      <Tower position={[-12, 0, -8]} radius={3.4} height={24} roofColor="#a37c84" roofHeight={10} />
+      <Tower position={[12, 0, -8]} radius={3.4} height={24} roofColor="#a37c84" roofHeight={10} />
+      <Tower position={[0, 15, -1]} radius={4.5} height={14} roofColor="#6f6a8d" roofHeight={14} />
+      <Tower position={[-5.6, 0, 13.6]} radius={1.6} height={15} roofColor="#a37c84" roofHeight={6} />
+      <Tower position={[5.6, 0, 13.6]} radius={1.6} height={15} roofColor="#a37c84" roofHeight={6} />
+      <Tower position={[-7, 15, -4]} radius={1.3} height={8} roofColor="#7d93a8" roofHeight={5} />
+      <Tower position={[7, 15, -4]} radius={1.3} height={8} roofColor="#7d93a8" roofHeight={5} />
       <Windows list={windows} />
       {/* banners */}
-      <Banner position={[1.6, 46.4, -1]} color="#e6a9b8" />
-      <Banner position={[-10.4, 32.2, 8]} color="#c9b6e8" />
-      <Banner position={[13.6, 32.2, 8]} color="#a9c6e3" />
+      <Banner position={[1.6, 46.4, -1]} color="#9c6f7a" />
+      <Banner position={[-10.4, 32.2, 8]} color="#6f6a8d" />
+      <Banner position={[13.6, 32.2, 8]} color="#5f7790" />
       {/* path to the terrace */}
       {Array.from({ length: 9 }, (_, i) => (
         <mesh key={i} position={[(i % 2 ? 0.3 : -0.3), 0.55, 18 + i * 1.6]} rotation={[0, (i % 3) * 0.2, 0]} receiveShadow>
           <cylinderGeometry args={[1.5, 1.6, 0.25, 7]} />
-          <meshStandardMaterial color="#efe2d2" roughness={0.9} />
+          <meshStandardMaterial color="#d8cfc3" roughness={0.95} />
         </mesh>
       ))}
     </group>

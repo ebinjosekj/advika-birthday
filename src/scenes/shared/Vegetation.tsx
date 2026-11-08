@@ -4,6 +4,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { applyWind } from './uniforms';
 import { islandSurface, type FlatZone } from './Island';
 import { mulberry32 } from '../../utils/random';
+import { useAssetTexture } from './assets';
 
 type V3 = [number, number, number];
 
@@ -59,7 +60,7 @@ export function Grass({ areas, count }: { areas: Scatter[]; count: number }) {
     const q = new THREE.Quaternion();
     const e = new THREE.Euler();
     const col = new THREE.Color();
-    const palette = ['#a7cf9f', '#bfe3cf', '#cfe6a8', '#94c09a', '#d9e8b4'].map((c) => new THREE.Color(c));
+    const palette = ['#6f8d4a', '#86a35a', '#9cb46b', '#7a9450', '#a9b878', '#5f7d42'].map((c) => new THREE.Color(c));
     let n = 0;
     const per = Math.ceil(count / areas.length);
     areas.forEach((a) => {
@@ -159,43 +160,103 @@ export function Flowers({ areas, count, glow = 0, scale = 1 }: { areas: Scatter[
   return <instancedMesh ref={ref} args={[geo, mat, count]} frustumCulled={false} />;
 }
 
-/** Stylised fantasy trees: curved tapered trunk + clustered blossom canopies that sway. */
-export function Trees({ areas, count, palette = ['#f2b8c6', '#c9b6e8', '#bfe3cf', '#f6d2b8'] }: { areas: Scatter[]; count: number; palette?: string[] }) {
+/** Canvas-painted cluster of leaves (alpha cut-out), tinted per instance. */
+function leafClusterTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const x = c.getContext('2d')!;
+  const rng = mulberry32(17);
+  for (let i = 0; i < 70; i++) {
+    const a = rng() * Math.PI * 2;
+    const r = Math.sqrt(rng()) * 100;
+    const px = 128 + Math.cos(a) * r;
+    const py = 128 + Math.sin(a) * r;
+    const len = 16 + rng() * 14;
+    const rot = rng() * Math.PI * 2;
+    const l = 55 + rng() * 40; // value variation → depth and sun flecks
+    x.save();
+    x.translate(px, py);
+    x.rotate(rot);
+    x.fillStyle = `hsl(${80 + rng() * 30} ${12 + rng() * 18}% ${l}%)`;
+    x.beginPath();
+    x.moveTo(0, -len);
+    x.quadraticCurveTo(len * 0.55, 0, 0, len);
+    x.quadraticCurveTo(-len * 0.55, 0, 0, -len);
+    x.fill();
+    x.strokeStyle = `rgba(40,50,20,0.35)`;
+    x.lineWidth = 1;
+    x.beginPath();
+    x.moveTo(0, -len * 0.9);
+    x.lineTo(0, len * 0.9);
+    x.stroke();
+    x.restore();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+function trunkGeometry() {
+  const parts: THREE.BufferGeometry[] = [];
+  const trunk = new THREE.CylinderGeometry(0.14, 0.38, 4.2, 9, 6);
+  trunk.translate(0, 2.1, 0);
+  const p = trunk.getAttribute('position') as THREE.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i) / 4.2;
+    p.setX(i, p.getX(i) + Math.sin(y * 2.4) * 0.25 * y);
+  }
+  parts.push(trunk);
+  // three limbs reaching into the crown
+  [0, 2.1, 4.2].forEach((yaw, k) => {
+    const b = new THREE.CylinderGeometry(0.05, 0.12, 2.2, 6, 1);
+    b.translate(0, 1.1, 0);
+    b.rotateZ(0.75);
+    b.rotateY(yaw + k * 0.3);
+    b.translate(0, 2.6 + k * 0.45, 0);
+    parts.push(b);
+  });
+  const g = mergeGeometries(parts.map((x) => x.toNonIndexed()))!;
+  g.computeVertexNormals();
+  return g;
+}
+
+export const FOLIAGE = {
+  summer: ['#5f7f3d', '#6f8f47', '#7d9a52', '#4f6d34', '#8aa35e'],
+  forest: ['#4c6a3a', '#5a7a44', '#3f5a33', '#6b8650', '#566f3f'],
+  blossom: ['#f1c9d2', '#ead7e2', '#f6e3e6', '#7d9a52', '#e9bfcb'],
+};
+
+/**
+ * Trees with real foliage structure: a curved trunk with limbs (scanned bark
+ * normal map) and a crown built from dozens of alpha-cut leaf clusters, so light
+ * breaks up through the canopy instead of reading as smooth balls. Leaves flutter
+ * in the same wind field as the grass.
+ */
+export function Trees({ areas, count, palette = FOLIAGE.summer }: { areas: Scatter[]; count: number; palette?: string[] }) {
   const trunks = useRef<THREE.InstancedMesh>(null);
-  const canopy = useRef<THREE.InstancedMesh>(null);
-  const BLOBS = 6;
-  const trunkGeo = useMemo(() => {
-    const g = new THREE.CylinderGeometry(0.16, 0.42, 4, 8, 6);
-    g.translate(0, 2, 0);
-    const p = g.getAttribute('position') as THREE.BufferAttribute;
-    for (let i = 0; i < p.count; i++) {
-      const y = p.getY(i) / 4;
-      p.setX(i, p.getX(i) + Math.sin(y * 2.2) * 0.35 * y);
-    }
-    g.computeVertexNormals();
-    return g;
-  }, []);
-  const blobGeo = useMemo(() => {
-    const g = new THREE.IcosahedronGeometry(1, 2);
-    const p = g.getAttribute('position') as THREE.BufferAttribute;
-    const rng = mulberry32(5);
-    for (let i = 0; i < p.count; i++) {
-      const k = 1 + (rng() - 0.5) * 0.14;
-      p.setXYZ(i, p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k);
-    }
-    g.computeVertexNormals();
-    return g;
-  }, []);
-  const trunkMat = useMemo(() => applyWind(new THREE.MeshStandardMaterial({ color: '#8f7280', roughness: 0.9 }), { strength: 0.05, height: 4 }), []);
-  const canopyMat = useMemo(
-    () => applyWind(new THREE.MeshStandardMaterial({ roughness: 0.75, flatShading: false }), { strength: 0.22, height: 6, flutter: 0.03 }),
+  const leaves = useRef<THREE.InstancedMesh>(null);
+  const CARDS = 34;
+  const bark = useAssetTexture('nBark', { repeat: 2 });
+  const trunkGeo = useMemo(() => trunkGeometry(), []);
+  const cardGeo = useMemo(() => new THREE.PlaneGeometry(1.7, 1.7), []);
+  const trunkMat = useMemo(
+    () => applyWind(new THREE.MeshStandardMaterial({ color: '#5b4a3e', roughness: 0.95, normalMap: bark, normalScale: new THREE.Vector2(1.2, 1.2) }), { strength: 0.04, height: 4 }),
+    [bark],
+  );
+  const leafMat = useMemo(
+    () =>
+      applyWind(
+        new THREE.MeshStandardMaterial({ map: leafClusterTexture(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.78, envMapIntensity: 0.5 }),
+        { strength: 0.18, height: 1, flutter: 0.04 },
+      ),
     [],
   );
   useLayoutEffect(() => {
-    const t = trunks.current, c = canopy.current;
+    const t = trunks.current, c = leaves.current;
     if (!t || !c) return;
     const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
+    const o = new THREE.Object3D();
     const col = new THREE.Color();
     let n = 0;
     const per = Math.ceil(count / areas.length);
@@ -203,34 +264,48 @@ export function Trees({ areas, count, palette = ['#f2b8c6', '#c9b6e8', '#bfe3cf'
       const rng = mulberry32(a.seed * 17);
       scatterOnIsland(a, per, mulberry32(a.seed * 19)).forEach((pt) => {
         if (n >= count) return;
-        const s = 0.8 + rng() * 0.8;
+        const s = 0.85 + rng() * 0.75;
         const yaw = rng() * Math.PI * 2;
-        q.setFromEuler(new THREE.Euler(0, yaw, 0));
-        m.compose(new THREE.Vector3(pt.x, pt.y - 0.2, pt.z), q, new THREE.Vector3(s, s, s));
-        t.setMatrixAt(n, m);
+        o.position.set(pt.x, pt.y - 0.25, pt.z);
+        o.rotation.set(0, yaw, 0);
+        o.scale.setScalar(s);
+        o.updateMatrix();
+        t.setMatrixAt(n, o.matrix);
         const base = new THREE.Color(palette[Math.floor(rng() * palette.length)]);
-        for (let b = 0; b < BLOBS; b++) {
-          const ang = (b / BLOBS) * Math.PI * 2 + rng();
-          const rad = b === 0 ? 0 : 0.9 + rng() * 0.6;
-          const bs = (b === 0 ? 1.7 : 1.0 + rng() * 0.6) * s;
-          const off = new THREE.Vector3(Math.cos(ang + yaw) * rad * s + 0.35 * s, (4 + (b === 0 ? 0.6 : rng() * 0.9)) * s, Math.sin(ang + yaw) * rad * s);
-          m.compose(new THREE.Vector3(pt.x + off.x, pt.y - 0.2 + off.y, pt.z + off.z), q, new THREE.Vector3(bs, bs * 0.85, bs));
-          c.setMatrixAt(n * BLOBS + b, m);
-          c.setColorAt(n * BLOBS + b, col.copy(base).offsetHSL((rng() - 0.5) * 0.03, 0, (rng() - 0.5) * 0.1));
+        // crown: an irregular ellipsoid, denser toward the outside where light hits
+        const cy = 4.6 * s, rx = 2.3 * s, ry = 1.7 * s;
+        for (let k = 0; k < CARDS; k++) {
+          const u = rng() * Math.PI * 2;
+          const v = Math.acos(2 * rng() - 1);
+          const rr = 0.55 + Math.pow(rng(), 0.5) * 0.45;
+          const dx = Math.sin(v) * Math.cos(u) * rx * rr + Math.sin(yaw) * 0.3 * s;
+          const dy = Math.cos(v) * ry * rr;
+          const dz = Math.sin(v) * Math.sin(u) * rx * rr;
+          o.position.set(pt.x + dx, pt.y - 0.25 + cy + dy, pt.z + dz);
+          o.lookAt(pt.x + dx * 2, pt.y + cy + dy * 2 + 0.6, pt.z + dz * 2);
+          o.rotateZ(rng() * Math.PI * 2);
+          o.rotateX((rng() - 0.5) * 0.9);
+          o.scale.setScalar(s * (0.75 + rng() * 0.5));
+          o.updateMatrix();
+          c.setMatrixAt(n * CARDS + k, o.matrix);
+          // inner leaves sit in shade; outer ones catch the sun
+          const shade = 0.62 + rr * 0.45 + (dy > 0 ? 0.1 : -0.08);
+          c.setColorAt(n * CARDS + k, col.copy(base).multiplyScalar(shade).offsetHSL((rng() - 0.5) * 0.02, 0, 0));
         }
         n++;
       });
     });
     t.count = n;
-    c.count = n * BLOBS;
+    c.count = n * CARDS;
     t.instanceMatrix.needsUpdate = true;
     c.instanceMatrix.needsUpdate = true;
     if (c.instanceColor) c.instanceColor.needsUpdate = true;
+    void m;
   }, [areas, count, palette]);
   return (
     <group>
-      <instancedMesh ref={trunks} args={[trunkGeo, trunkMat, count]} castShadow frustumCulled={false} />
-      <instancedMesh ref={canopy} args={[blobGeo, canopyMat, count * BLOBS]} castShadow frustumCulled={false} />
+      <instancedMesh ref={trunks} args={[trunkGeo, trunkMat, count]} castShadow receiveShadow frustumCulled={false} />
+      <instancedMesh ref={leaves} args={[cardGeo, leafMat, count * CARDS]} receiveShadow frustumCulled={false} />
     </group>
   );
 }

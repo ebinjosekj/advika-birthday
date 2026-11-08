@@ -8,14 +8,6 @@ export interface RsvpRecord {
   demo: boolean;
 }
 
-export interface WishRecord {
-  id: string;
-  name: string;
-  message: string;
-  createdAt: string;
-  demo: boolean;
-}
-
 export interface SubmitResult {
   ok: boolean;
   demo: boolean;

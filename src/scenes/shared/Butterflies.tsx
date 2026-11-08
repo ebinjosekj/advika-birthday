@@ -39,7 +39,7 @@ function wingGeometry(side: 1 | -1, lower: boolean) {
  * between flap bursts, and land on perches (flowers) where they slowly fan
  * their wings. Four instanced draws for the whole swarm.
  */
-export function ButterflySwarm({ count, center, radius, height = 4, perches = [], colors = ['#f2b8c6', '#c9b6e8', '#a9c6e3', '#f4c7a9', '#bfe3cf'], scale = 0.45, seed = 3, activation, origin }: SwarmProps) {
+export function ButterflySwarm({ count, center, radius, height = 4, perches = [], colors = ['#e39a45', '#6f9fd6', '#f1ead0', '#d8bf58', '#c88fae'], scale = 0.45, seed = 3, activation, origin }: SwarmProps) {
   const refs = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)];
   const body = useRef<THREE.InstancedMesh>(null);
   const { geos, mat, bodyGeo, bodyMat } = useMemo(() => {

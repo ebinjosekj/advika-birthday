@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { cloudTexture } from './textures';
+import { useAssetTexture } from './assets';
 import { globalUniforms } from './uniforms';
 import { mulberry32 } from '../../utils/random';
 
@@ -20,6 +20,7 @@ interface CloudLayerProps {
  * lavender underneath so they read as volumes rather than flat sprites.
  */
 export function CloudLayer({ count, seed, center, spread, size, speed, opacity = 0.9 }: CloudLayerProps) {
+  const cloudTex = useAssetTexture('cloud', { color: true });
   const { geometry, material } = useMemo(() => {
     const rand = mulberry32(seed);
     const base = new THREE.PlaneGeometry(1, 1);
@@ -53,7 +54,7 @@ export function CloudLayer({ count, seed, center, spread, size, speed, opacity =
       transparent: true,
       depthWrite: false,
       uniforms: {
-        uTex: { value: cloudTexture() },
+        uTex: { value: cloudTex },
         uTime: globalUniforms.uTime,
         uMood: globalUniforms.uMood,
         uSpeed: { value: speed },
@@ -87,12 +88,16 @@ export function CloudLayer({ count, seed, center, spread, size, speed, opacity =
         uniform sampler2D uTex; uniform float uMood; uniform float uOpacity;
         varying vec2 vUv; varying float vShade; varying float vFade; varying float vH;
         void main(){
-          float a = texture2D(uTex, vUv).a;
-          vec3 top = mix(vec3(1.0,0.95,0.88), vec3(0.62,0.6,0.82), uMood);
-          vec3 bottom = mix(vec3(0.84,0.76,0.9), vec3(0.2,0.18,0.36), uMood);
-          vec3 col = mix(bottom, top, smoothstep(0.15, 0.85, vH) * (0.75 + vShade*0.25));
-          col += vec3(1.0,0.75,0.6) * pow(1.0 - vH, 3.0) * 0.12 * (1.0-uMood);
-          float alpha = a * vFade * uOpacity * (0.75 + vShade*0.4);
+          vec4 tx = texture2D(uTex, vUv);
+          float a = tx.a;
+          float density = 1.0 - tx.r;            // darker texels = thicker cloud
+          // sunlit tops, cool shadowed bellies, warm rim scattering toward the low sun
+          vec3 lit = mix(vec3(1.0,0.96,0.9), vec3(0.62,0.66,0.82), uMood);
+          vec3 shade = mix(vec3(0.66,0.66,0.74), vec3(0.14,0.16,0.28), uMood);
+          float light = smoothstep(0.1, 0.9, vH) * (0.8 + vShade * 0.2) - density * 0.9;
+          vec3 col = mix(shade, lit, clamp(light + 0.35, 0.0, 1.0));
+          col += vec3(1.0,0.7,0.45) * pow(a, 3.0) * pow(1.0 - vH, 2.0) * 0.18 * (1.0 - uMood);
+          float alpha = a * vFade * uOpacity * (0.85 + vShade * 0.3);
           if (alpha < 0.004) discard;
           gl_FragColor = vec4(col, alpha);
           #include <tonemapping_fragment>
@@ -100,7 +105,7 @@ export function CloudLayer({ count, seed, center, spread, size, speed, opacity =
         }`,
     });
     return { geometry: g, material: m };
-  }, [count, seed, center, spread, size, speed, opacity]);
+  }, [count, seed, center, spread, size, speed, opacity, cloudTex]);
   return <mesh geometry={geometry} material={material} frustumCulled={false} />;
 }
 
@@ -109,7 +114,7 @@ const LAYERS = [
   { seed: 1, center: [0, 64, 175], spread: [220, 26, 120], size: [18, 42], speed: 1.2, share: 0.3 },
   { seed: 2, center: [0, 40, 60], spread: [320, 30, 140], size: [26, 60], speed: 0.6, share: 0.2 },
   // sea of clouds under the floating kingdom
-  { seed: 3, center: [0, -26, -60], spread: [520, 10, 380], size: [60, 120], speed: 0.35, share: 0.3 },
+  { seed: 3, center: [0, -34, -60], spread: [520, 10, 380], size: [60, 120], speed: 0.35, share: 0.3 },
   // high distant banks around the castle
   { seed: 4, center: [0, 34, -260], spread: [600, 40, 160], size: [50, 110], speed: 0.8, share: 0.2 },
 ] as const;

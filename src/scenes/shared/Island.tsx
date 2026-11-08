@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { makeNoise3 } from '../../utils/random';
+import { useAssetTexture } from './assets';
 
 /** Height of an island's top surface at local (x,z); shared by placement code. */
 export interface FlatZone {
@@ -37,12 +38,12 @@ export function makeIslandGeometry(radius: number, depth: number, seed: number, 
   const surf = islandSurface(seed, radius, flat);
   const pos = g.getAttribute('position') as THREE.BufferAttribute;
   const colors = new Float32Array(pos.count * 3);
-  const grassA = new THREE.Color('#9cc79a');
-  const grassB = new THREE.Color('#c4dfa4');
-  const soil = new THREE.Color('#b08d7f');
-  const rockA = new THREE.Color('#cbb4b0');
-  const rockB = new THREE.Color('#9e8a9e');
-  const rockC = new THREE.Color('#7d6d86');
+  const grassA = new THREE.Color('#6d8a47');
+  const grassB = new THREE.Color('#9aae63');
+  const soil = new THREE.Color('#6e5a46');
+  const rockA = new THREE.Color('#a39586');
+  const rockB = new THREE.Color('#7f736a');
+  const rockC = new THREE.Color('#5d5752');
   const c = new THREE.Color();
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
@@ -85,9 +86,10 @@ interface IslandProps {
 
 export function Island({ position, radius, depth, seed, flat, receiveShadow }: IslandProps) {
   const geo = useMemo(() => makeIslandGeometry(radius, depth, seed, flat), [radius, depth, seed, flat]);
+  const rock = useAssetTexture('nRock', { repeat: Math.max(4, Math.round(radius / 3)) });
   return (
     <mesh geometry={geo} position={position} receiveShadow={receiveShadow} castShadow={false}>
-      <meshStandardMaterial vertexColors roughness={0.92} metalness={0} />
+      <meshStandardMaterial vertexColors roughness={0.95} metalness={0} normalMap={rock} normalScale={[0.9, 0.9]} envMapIntensity={0.6} />
     </mesh>
   );
 }

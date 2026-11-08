@@ -1,4 +1,4 @@
-import { cleanText, validateRsvp, validateWish } from '../../src/utils/validation';
+import { cleanText, validateRsvp } from '../../src/utils/validation';
 
 describe('RSVP validation', () => {
   const ok = { name: 'Maya Thomas', attending: 'yes' as const, attendees: 3, message: '' };
@@ -18,14 +18,9 @@ describe('RSVP validation', () => {
   it('limits the message length', () => expect(validateRsvp({ ...ok, message: 'x'.repeat(301) }).message).toBeTruthy());
 });
 
-describe('wish validation & cleaning', () => {
-  it('enforces min/max length', () => {
-    expect(validateWish({ name: '', message: 'hi' }).message).toBeTruthy();
-    expect(validateWish({ name: '', message: 'x'.repeat(141) }).message).toBeTruthy();
-    expect(validateWish({ name: '', message: 'Happy birthday!' })).toEqual({});
-  });
+describe('text cleaning', () => {
   it('strips control and bidi characters and collapses whitespace', () => {
-    expect(cleanText('  a\u0000b‮c   \n d ')).toBe('abc d');
+    expect(cleanText('  a\u0000b\u202Ec   \n d ')).toBe('abc d');
     expect(cleanText('line1\n\n\n\nline2', { multiline: true })).toBe('line1\n\nline2');
   });
 });

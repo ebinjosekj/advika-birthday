@@ -27,12 +27,12 @@ export function SkyDome() {
             vec3 d = normalize(vDir);
             float h = d.y;
             // day palette: champagne horizon → peach → powder blue → lavender zenith
-            vec3 dayZen = vec3(0.56,0.62,0.86);
-            vec3 dayMid = vec3(0.80,0.80,0.93);
-            vec3 dayHor = vec3(1.0,0.86,0.76);
-            vec3 nightZen = vec3(0.07,0.07,0.20);
-            vec3 nightMid = vec3(0.22,0.18,0.40);
-            vec3 nightHor = vec3(0.62,0.45,0.62);
+            vec3 dayZen = vec3(0.20,0.38,0.70);
+            vec3 dayMid = vec3(0.50,0.64,0.84);
+            vec3 dayHor = vec3(0.96,0.80,0.64);
+            vec3 nightZen = vec3(0.03,0.05,0.13);
+            vec3 nightMid = vec3(0.10,0.13,0.27);
+            vec3 nightHor = vec3(0.38,0.33,0.45);
             vec3 zen = mix(dayZen, nightZen, uMood);
             vec3 mid = mix(dayMid, nightMid, uMood);
             vec3 hor = mix(dayHor, nightHor, uMood);

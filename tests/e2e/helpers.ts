@@ -45,4 +45,4 @@ export async function centre(page: Page, id: string) {
   await page.waitForFunction((id) => window.__MAGIC__!.state().activeSection === id, id, { timeout: 30_000 });
 }
 
-export const SECTIONS = ['home', 'birthday', 'countdown', 'details', 'location', 'dress-code', 'rsvp', 'wishes', 'finale'];
+export const SECTIONS = ['home', 'birthday', 'countdown', 'details', 'location', 'dress-code', 'rsvp', 'finale'];

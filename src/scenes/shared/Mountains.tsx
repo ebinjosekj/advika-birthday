@@ -45,10 +45,10 @@ export function DistantMountains() {
             vertexShader: `attribute float aH; varying float vH; void main(){ vH=aH; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
             fragmentShader: `uniform float uMood; uniform float uHaze; varying float vH;
               void main(){
-                vec3 day = mix(vec3(0.93,0.8,0.82), vec3(0.72,0.7,0.9), vH);
+                vec3 day = mix(vec3(0.78,0.78,0.82), vec3(0.55,0.6,0.72), vH);
                 vec3 night = mix(vec3(0.45,0.33,0.5), vec3(0.16,0.14,0.32), vH);
                 vec3 c = mix(day, night, uMood);
-                c = mix(c, mix(vec3(1.0,0.88,0.8), vec3(0.5,0.4,0.6), uMood), uHaze*(1.0-vH*0.5));
+                c = mix(c, mix(vec3(0.93,0.87,0.82), vec3(0.3,0.3,0.42), uMood), uHaze*(1.0-vH*0.5));
                 gl_FragColor = vec4(c, 0.92);
                 #include <colorspace_fragment>
               }`,

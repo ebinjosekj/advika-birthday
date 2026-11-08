@@ -14,7 +14,6 @@ import { PartyDetails } from '../components/PartyDetails/PartyDetails';
 import { Location } from '../components/Location/Location';
 import { DressCode } from '../components/DressCode/DressCode';
 import { RSVP } from '../components/RSVP/RSVP';
-import { Wishes } from '../components/Wishes/Wishes';
 import { Finale } from '../components/Finale/Finale';
 import { StaticWorld } from '../components/Kingdom/StaticWorld';
 import { WorldBoundary } from '../components/Kingdom/WorldBoundary';
@@ -86,7 +85,6 @@ export default function App() {
         <Location />
         <DressCode />
         <RSVP />
-        <Wishes />
         <Finale />
       </main>
       {main && <QuickDetails />}

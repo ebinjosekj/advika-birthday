@@ -23,7 +23,7 @@ test.describe('A · application', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Advika’s Magical Fairy Birthday' })).toBeVisible();
     await expect(page.getByTestId('hero-when')).toContainText('Saturday, November 28, 2026');
     await expect(page.getByTestId('hero-when')).toContainText('6:00 PM');
-    for (const name of ['Advika is turning 7!', 'Party details', 'The magical location', 'Come Dressed in Pastel Magic!', 'Will You Join Our Magical Celebration?', 'Send Advika a Birthday Wish', 'WE CAN’T WAIT TO CELEBRATE WITH YOU!'])
+    for (const name of ['Advika is turning 7!', 'Party details', 'The magical location', 'Come Dressed in Pastel Magic!', 'Will You Join Our Magical Celebration?', 'WE CAN’T WAIT TO CELEBRATE WITH YOU!'])
       await expect(page.getByRole('heading', { name })).toBeAttached();
     await expect(page.getByTestId('address')).toContainText('239 Eden Oak Trail');
     await expect(page.getByTestId('address')).toContainText('1st Floor, Community Lounge');

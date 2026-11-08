@@ -1,7 +1,6 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RsvpForm } from '../../src/components/RSVP/RSVP';
-import { WishGarden } from '../../src/components/Wishes/Wishes';
 
 describe('<RsvpForm>', () => {
   beforeEach(() => localStorage.clear());
@@ -45,20 +44,5 @@ describe('<RsvpForm>', () => {
     expect(await screen.findByTestId('rsvp-error', {}, { timeout: 3000 })).toHaveTextContent(/not saved/i);
     expect(screen.getByRole('button', { name: /try again/i })).toBeEnabled();
     window.history.replaceState(null, '', '/');
-  });
-});
-
-describe('<WishGarden>', () => {
-  beforeEach(() => localStorage.clear());
-
-  it('validates, then renders a submitted wish as text (no HTML injection)', async () => {
-    const { container } = render(<WishGarden />);
-    await userEvent.click(screen.getByRole('button', { name: /send my wish/i }));
-    expect(await screen.findByText(/at least 3 characters/i)).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText('Your wish'), '<b onmouseover=x>Sparkle on</b>');
-    await userEvent.click(screen.getByRole('button', { name: /send my wish/i }));
-    await waitFor(() => expect(within(screen.getByTestId('wish-list')).getByText('<b onmouseover=x>Sparkle on</b>')).toBeInTheDocument(), { timeout: 3000 });
-    expect(container.querySelector('[data-testid=wish-list] b')).toBeNull();
-    expect(screen.getByTestId('wish-confirm')).toHaveTextContent(/floating up/i);
   });
 });

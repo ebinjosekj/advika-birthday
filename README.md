@@ -43,7 +43,7 @@ npm run test:e2e               # Playwright end-to-end (starts the dev server au
 | `?renderScale=0.5` | Cap the render resolution (for very slow machines) |
 | `?reducedMotion=1` | Same as the OS “reduce motion” setting |
 | `?nowebgl=1` | Preview the painted no-WebGL fallback |
-| `?demoFail=1` | Demo mode only: make RSVP/wish submissions fail, to see the error state |
+| `?demoFail=1` | Demo mode only: make RSVP submissions fail, to see the error state |
 
 ## Where things live
 
@@ -55,30 +55,31 @@ npm run test:e2e               # Playwright end-to-end (starts the dev server au
 - **3D scenes:** `src/scenes/**`  ·  **Page chapters:** `src/components/**`
 - **Sound (synthesised, no audio files):** `src/services/audioEngine.ts`
 
-## RSVP & wishes storage (Supabase)
+## RSVP storage (Supabase)
 
-Without credentials the site runs in **local demo mode**: RSVPs and wishes are saved in the visitor’s own
+Without credentials the site runs in **local demo mode**: RSVPs are saved in the visitor’s own
 browser (`localStorage`) and are clearly labelled as demo. The hosts do **not** receive them.
 
 To store them for real:
 
 1. Create a Supabase project.
-2. Run `supabase/migrations/001_rsvps_and_wishes.sql` in the SQL editor. It creates the `rsvps` and `wishes`
-   tables with CHECK constraints, an idempotency key against double submits, and Row Level Security:
-   guests can **insert** RSVPs but never read them; guests can insert and read wishes the hosts haven’t hidden.
+2. Run `supabase/migrations/001_rsvps.sql` in the SQL editor. It creates the `rsvps`
+   table with CHECK constraints, an idempotency key against double submits, and Row Level Security:
+   guests can **insert** RSVPs but never read them.
 3. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
    (the public anon/publishable key — **never** the service-role key).
 4. Restart `npm run dev`. The demo badges disappear and submissions go to Supabase.
-5. Read RSVPs in the Supabase dashboard (Table editor → `rsvps`). To hide a wish, set `hidden = true`.
+5. Read RSVPs in the Supabase dashboard (Table editor → `rsvps`).
 
 Optional hardening for a public launch: put inserts behind an Edge Function with rate limiting / CAPTCHA.
 
 ## Assets & credits
 
-Everything visual and audible is generated in code — no third-party models, textures, fonts files or audio:
+Almost everything visual and audible is generated in code:
 
 - 3D models (castle, fairy, cake, book, islands, trees, butterflies) are procedural geometry written for this project.
 - Textures (stone, roof tiles, book cover, faces, wings) are painted at runtime on `<canvas>`.
 - Sound is synthesised with the Web Audio API.
+- Lighting/reflections use the CC0 Poly Haven *sunset* HDRI, clouds a CC0 photographic cloud sprite, and surfaces CC0 scanned normal maps — all via the `@pmndrs/assets` npm package (bundled locally).
 - Fonts: Cormorant Garamond and Jost (SIL Open Font License) via `@fontsource`, bundled locally.
 - Icons: Lucide (ISC).

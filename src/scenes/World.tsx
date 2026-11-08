@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { AdaptiveDpr, PerformanceMonitor, Sparkles } from '@react-three/drei';
-import { Bloom, DepthOfField, EffectComposer, ToneMapping, Vignette } from '@react-three/postprocessing';
+import { Bloom, BrightnessContrast, DepthOfField, EffectComposer, HueSaturation, N8AO, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { useMagic, world } from '../app/store';
@@ -12,7 +12,7 @@ import { Cloudscape } from './shared/Clouds';
 import { DistantMountains } from './shared/Mountains';
 import { GodRays } from './shared/GodRays';
 import { DistantIslands, Island } from './shared/Island';
-import { Flowers, Grass, Trees, type Scatter } from './shared/Vegetation';
+import { FOLIAGE, Flowers, Grass, Trees, type Scatter } from './shared/Vegetation';
 import { Waterfall, WaterSurface } from './shared/Water';
 import { Fireflies } from './shared/Fireflies';
 import { ButterflySwarm } from './shared/Butterflies';
@@ -31,7 +31,7 @@ import { SevenMonument } from './BirthdayScene/Seven';
 import { CelestialClock, HiddenStar } from './KingdomScene/Celestial';
 import { DetailArtifacts } from './EnchantedForestScene/Artifacts';
 import { GlowMushrooms } from './EnchantedForestScene/Mushrooms';
-import { FabricRibbons, WishOrbs } from './WishingGardenScene/Garden';
+import { FabricRibbons } from './WishingGardenScene/Garden';
 import { surprises } from '../components/Transitions/surprises';
 import { audio } from '../services/audioEngine';
 
@@ -91,10 +91,6 @@ function SurpriseHotspots() {
   );
 }
 
-function LiveWishOrbs() {
-  const wishCount = useMagic((s) => s.wishCount);
-  return <WishOrbs position={LANDMARKS.wishingGarden} count={wishCount} />;
-}
 
 function LiveHiddenStar() {
   const found = useMagic((s) => s.toast?.title === 'A secret star!');
@@ -137,7 +133,7 @@ function Kingdom({ q }: { q: QualityProfile }) {
       {/* ENV 2 — enchanted forest island */}
       <Island {...ISLANDS.forest} position={ISLANDS.forest.pos} receiveShadow />
       <Grass areas={[areas.forest]} count={Math.round(q.grass * 0.2)} />
-      <Trees areas={[areas.forest]} count={Math.round(q.trees * 0.4)} palette={['#c9b6e8', '#a9c6e3', '#bfe3cf', '#f2b8c6']} />
+      <Trees areas={[areas.forest]} count={Math.round(q.trees * 0.4)} palette={FOLIAGE.forest} />
       <Flowers areas={[areas.forest]} count={Math.round(q.flowers * 0.2)} glow={0.6} />
       <Fireflies center={FOREST_FIREFLY_POS} spread={FOREST_FIREFLY_SPREAD} count={q.fireflies} seed={2} />
       <GlowMushrooms position={LANDMARKS.mushrooms} pulseAt={mushroomAt} />
@@ -150,10 +146,9 @@ function Kingdom({ q }: { q: QualityProfile }) {
       <Island {...ISLANDS.meadow} position={ISLANDS.meadow.pos} receiveShadow />
       <Grass areas={[areas.meadow]} count={Math.round(q.grass * 0.2)} />
       <Flowers areas={[areas.meadow]} count={Math.round(q.flowers * 0.35)} glow={0.9} scale={1.2} />
-      <Trees areas={[areas.meadow]} count={Math.round(q.trees * 0.15)} />
+      <Trees areas={[areas.meadow]} count={Math.round(q.trees * 0.15)} palette={FOLIAGE.blossom} />
       <FabricRibbons position={LANDMARKS.fabrics} />
       <WaterSurface position={MEADOW_POND} radius={4.2} />
-      <LiveWishOrbs />
       <Fireflies center={MEADOW_FIREFLY_POS} spread={MEADOW_FIREFLY_SPREAD} count={Math.round(q.fireflies * 0.8)} seed={5} color="#ffd6f0" />
       <ButterflySwarm count={Math.round(q.butterflies * 0.4)} center={SWARM_MEADOW} radius={10} height={4} seed={4} perches={NO_PERCHES} />
 
@@ -161,7 +156,7 @@ function Kingdom({ q }: { q: QualityProfile }) {
       <Island {...ISLANDS.castle} position={ISLANDS.castle.pos} receiveShadow />
       <Grass areas={[areas.castle]} count={Math.round(q.grass * 0.25)} />
       <Flowers areas={[areas.castle]} count={Math.round(q.flowers * 0.25)} />
-      <Trees areas={[areas.castle]} count={Math.round(q.trees * 0.3)} />
+      <Trees areas={[areas.castle]} count={Math.round(q.trees * 0.3)} palette={FOLIAGE.blossom} />
       <Castle position={CASTLE_POS} />
       <Waterfall position={FALL_W} rotationY={-Math.PI / 2} width={5} height={40} mistCount={Math.round(q.particles / 25)} />
       <Waterfall position={FALL_E} rotationY={Math.PI / 2} width={4} height={36} mistCount={Math.round(q.particles / 30)} />
@@ -195,7 +190,7 @@ function StoryFairy() {
     const look = new THREE.Vector3();
     const station = new THREE.Vector3();
     const d: FairyDriver = {
-      scale: 1.6,
+      scale: 1.1,
       target: (t, out) => {
         const s = useMagic.getState();
         if (s.phase !== 'main') {
@@ -208,13 +203,13 @@ function StoryFairy() {
           ahead.lerp(look, 0.12).add(new THREE.Vector3(Math.sin(t * 0.9) * 1.2, -0.6 + Math.sin(t * 1.3) * 0.5, 0));
           const e = Math.min(1, f / 0.08);
           out.copy(book).add(new THREE.Vector3(0, 0, 1)).lerp(ahead, e * e * (3 - 2 * e));
-          d.scale = 1.4;
+          d.scale = 1.1;
           return true;
         }
         const n = STATIONS.length - 1;
         curves.fairy.getPoint(Math.min(1, Math.max(0, world.t / n)), station);
         out.copy(station).add(new THREE.Vector3(Math.sin(t * 0.7) * 1.4, Math.sin(t * 1.1) * 0.5, Math.cos(t * 0.5) * 0.9));
-        d.scale = s.activeSection === 'finale' ? 3.5 : s.activeSection === 'countdown' ? 2.4 : 1.4;
+        d.scale = s.activeSection === 'finale' ? 2.6 : s.activeSection === 'countdown' ? 1.8 : 1.0;
         return true;
       },
     };
@@ -279,23 +274,29 @@ function GuideButterfly() {
 function Effects({ q }: { q: QualityProfile }) {
   const gl = useThree((s) => s.gl);
   useEffect(() => {
-    gl.toneMapping = q.post === 'none' ? THREE.NeutralToneMapping : THREE.NoToneMapping;
+    gl.toneMapping = q.post === 'none' ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
   }, [gl, q.post]);
   if (q.post === 'none') return null;
   if (q.post === 'lite')
     return (
       <EffectComposer multisampling={0} enableNormalPass={false}>
-        <Bloom mipmapBlur intensity={0.6} luminanceThreshold={0.82} luminanceSmoothing={0.2} radius={0.7} />
-        <Vignette eskil={false} offset={0.25} darkness={0.5} />
-        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+        <Bloom mipmapBlur intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.2} radius={0.7} />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        <HueSaturation saturation={-0.06} />
+        <BrightnessContrast contrast={0.06} />
+        <Vignette eskil={false} offset={0.3} darkness={0.45} />
+        <SMAA />
       </EffectComposer>
     );
   return (
     <EffectComposer multisampling={4} enableNormalPass={false}>
-      <Bloom mipmapBlur intensity={0.85} luminanceThreshold={0.82} luminanceSmoothing={0.2} radius={0.7} />
+      <N8AO aoRadius={2.5} distanceFalloff={1} intensity={2.2} quality="medium" />
+      <Bloom mipmapBlur intensity={0.6} luminanceThreshold={0.85} luminanceSmoothing={0.2} radius={0.7} />
       <DepthOfField worldFocusDistance={45} worldFocusRange={160} bokehScale={1.5} />
-      <Vignette eskil={false} offset={0.25} darkness={0.55} />
-      <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+      <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      <HueSaturation saturation={-0.06} />
+      <BrightnessContrast contrast={0.07} />
+      <Vignette eskil={false} offset={0.3} darkness={0.5} />
     </EffectComposer>
   );
 }
@@ -344,7 +345,7 @@ export default function World({ onReady }: { onReady?: () => void }) {
       camera={{ fov: 48, near: 0.1, far: 2000, position: [0, 74, 210] }}
       onCreated={({ gl, scene }) => {
         if (new URLSearchParams(location.search).has('debugScene')) (window as unknown as { __scene?: THREE.Scene }).__scene = scene;
-        gl.toneMappingExposure = 1.05;
+        gl.toneMappingExposure = 1.12;
         gl.setClearColor('#f3dfe0');
         gl.domElement.setAttribute('aria-hidden', 'true');
         gl.domElement.style.touchAction = 'pan-y';

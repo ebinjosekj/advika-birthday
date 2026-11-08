@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { globalUniforms } from './uniforms';
 import { particles } from './Particles';
 import { makeFlowerGeometry, PASTELS } from './Vegetation';
+import { glowTexture } from './textures';
 
 /**
  * Procedurally modelled fairy (original design — no external model available in
@@ -325,6 +326,11 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
 
   return (
     <group ref={root}>
+      {/* soft aura so she reads as a creature of light at a distance */}
+      <sprite position={[0, 0.6, 0]} scale={[1.6, 1.6, 1]}>
+        <spriteMaterial map={glowTexture()} color="#ffe7c2" transparent opacity={0.55} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+      </sprite>
+      <pointLight position={[0, 0.6, 0.2]} color="#ffdcae" intensity={2.5} distance={4} decay={2} />
       <group ref={body}>
         {/* torso */}
         <mesh geometry={geos.bodice} material={mats.dress} castShadow />

@@ -61,7 +61,8 @@ export function RainbowBridge() {
             col *= 1.0 + uMood*0.35;
             float edge = smoothstep(0.0,0.04,vUv.y)*smoothstep(1.0,0.96,vUv.y);
             float ends = smoothstep(0.0,0.03,vUv.x)*smoothstep(1.0,0.97,vUv.x);
-            gl_FragColor = vec4(col*1.08, (0.88)*edge*ends);
+            col = mix(col, vec3(1.0), 0.2);
+            gl_FragColor = vec4(col, 0.72*edge*ends);
             #include <colorspace_fragment>
           }`,
       }),

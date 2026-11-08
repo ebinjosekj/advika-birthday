@@ -53,7 +53,6 @@ export const SECTION_IDS = [
   'location',
   'dress-code',
   'rsvp',
-  'wishes',
   'finale',
 ] as const;
 export type SectionId = (typeof SECTION_IDS)[number];
@@ -77,7 +76,6 @@ export const STATIONS: Station[] = [
   { id: 'location', pos: [-46, 9, -30], look: [18, 7, -46], mood: 0.38, fairy: [-30, 10, -40], frame: [-0.38, 0] },
   { id: 'dress-code', pos: [20, 6.5, -26], look: [36, 4.5, -46], mood: 0.2, fairy: [28, 8, -34], frame: [0.4, 0] },
   { id: 'rsvp', pos: [18, 10, -60], look: [0, 13, -122], mood: 0.5, fairy: [9, 12, -76], frame: [-0.44, 0.08] },
-  { id: 'wishes', pos: [53, 6.5, -37], look: [43, 2, -56], mood: 0.86, fairy: [47, 6, -46], frame: [0.4, 0] },
   { id: 'finale', pos: [26, 42, 36], look: [0, 6, -105], mood: 0.62, fairy: [0, 22, -118], frame: [0, 0.3] },
 ];
 

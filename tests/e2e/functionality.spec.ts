@@ -129,28 +129,6 @@ test.describe('D · functionality', () => {
     expect(dl.suggestedFilename()).toMatch(/\.ics$/);
   });
 
-  test('birthday wishes validate, save, and render safely', async ({ page }) => {
-    await openMain(page);
-    await centre(page, 'wishes');
-    const form = page.getByTestId('wish-form');
-    await form.getByTestId('wish-submit').click();
-    await expect(form.getByText(/at least 3 characters/)).toBeVisible();
-    const evil = '<img src=x onerror="window.__pwned=1">Shine bright!';
-    await form.getByLabel('Your wish').fill(evil);
-    await form.getByLabel(/From/).fill('Aunt Mira');
-    await expect(page.getByTestId('wish-counter')).toContainText(`${evil.length}/140`);
-    await form.getByTestId('wish-submit').click();
-    await expect(page.getByTestId('wish-list')).toContainText(evil);
-    await expect(page.getByTestId('wish-list')).toContainText('Aunt Mira');
-    await expect(page.getByTestId('wish-confirm')).toContainText('floating up');
-    expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
-    expect(await page.locator('[data-testid=wish-list] img').count()).toBe(0);
-    // persists across reloads (demo storage)
-    await page.reload();
-    await page.waitForFunction(() => window.__MAGIC__?.state().phase === 'main', null, { timeout: 90_000 });
-    await expect(page.getByTestId('wish-list')).toContainText('Shine bright!');
-  });
-
   test('hidden surprises: cake, mushroom, star and the seven-tap butterfly', async ({ page }) => {
     const c = collect(page);
     await openMain(page);
@@ -188,7 +166,7 @@ test.describe('D · functionality', () => {
 
   test('quick-details chip always offers date, time, place and RSVP', async ({ page }) => {
     await openMain(page);
-    await centre(page, 'wishes');
+    await centre(page, 'finale');
     await page.getByTestId('quick-details').click();
     const dlg = page.getByRole('dialog', { name: 'Invitation essentials' });
     await expect(dlg).toContainText('Saturday, November 28, 2026');

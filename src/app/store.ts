@@ -24,7 +24,6 @@ interface MagicState {
   butterflyClicks: number;
   secretFound: boolean;
   toast: MagicToast | null;
-  wishCount: number;
   /** optional DPR ceiling (URL ?renderScale=) for very slow machines */
   maxDpr: number;
   setPhase: (p: Phase) => void;
@@ -37,7 +36,6 @@ interface MagicState {
   clickButterfly: () => number;
   showToast: (t: Omit<MagicToast, 'id'>) => void;
   clearToast: () => void;
-  setWishCount: (n: number) => void;
   init: (p: Partial<Pick<MagicState, 'quality' | 'webgl' | 'reducedMotion' | 'maxDpr'>>) => void;
 }
 
@@ -56,7 +54,6 @@ export const useMagic = create<MagicState>((set, get) => ({
   butterflyClicks: 0,
   secretFound: false,
   toast: null,
-  wishCount: 0,
   maxDpr: 4,
   setPhase: (phase) => set({ phase }),
   setActiveSection: (activeSection) => set({ activeSection }),
@@ -72,7 +69,6 @@ export const useMagic = create<MagicState>((set, get) => ({
   },
   showToast: (t) => set({ toast: { ...t, id: ++toastId } }),
   clearToast: () => set({ toast: null }),
-  setWishCount: (wishCount) => set({ wishCount }),
   init: (p) => set(p),
 }));
 

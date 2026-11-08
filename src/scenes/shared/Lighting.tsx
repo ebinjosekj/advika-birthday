@@ -1,25 +1,27 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Environment, Lightformer } from '@react-three/drei';
+import { Environment } from '@react-three/drei';
+import { useAssetUrl } from './assets';
 import * as THREE from 'three';
 import { world } from '../../app/store';
 import type { QualityProfile } from '../../utils/quality';
 
-const dayFog = new THREE.Color('#f3dfe0');
-const nightFog = new THREE.Color('#3e3466');
-const daySun = new THREE.Color('#ffd7a8');
-const nightSun = new THREE.Color('#aab8ff');
+const dayFog = new THREE.Color('#cfd6df');
+const nightFog = new THREE.Color('#283048');
+const daySun = new THREE.Color('#ffd2a1');
+const nightSun = new THREE.Color('#9fb2e6');
 
 /** Sun ↔ moon key light, hemisphere fill, and fog — all keyed to world.mood. */
 export function Lighting({ q }: { q: QualityProfile }) {
   const sun = useRef<THREE.DirectionalLight>(null);
   const hemi = useRef<THREE.HemisphereLight>(null);
   const { scene, camera } = useThree();
+  const hdri = useAssetUrl('hdriSunset');
   useFrame(() => {
     const m = world.mood;
     if (scene.fog instanceof THREE.FogExp2) {
       scene.fog.color.copy(dayFog).lerp(nightFog, m);
-      scene.fog.density = 0.0019 + m * 0.0009;
+      scene.fog.density = 0.0011 + m * 0.0008;
     }
     if (sun.current) {
       sun.current.color.copy(daySun).lerp(nightSun, m);
@@ -29,13 +31,14 @@ export function Lighting({ q }: { q: QualityProfile }) {
       sun.current.target.position.set(camera.position.x, 0, camera.position.z - 30);
       sun.current.target.updateMatrixWorld();
     }
-    if (hemi.current) hemi.current.intensity = 1.25 - m * 0.55;
+    if (hemi.current) hemi.current.intensity = 0.55 - m * 0.3;
+    // photographic sky lighting fades toward moonlight
+    scene.environmentIntensity = 0.95 - m * 0.65;
   });
   return (
     <>
-      <fogExp2 attach="fog" args={['#f3dfe0', 0.0019]} />
-      <hemisphereLight ref={hemi} args={['#e9dcff', '#c8e6d0', 1.2]} />
-      <ambientLight intensity={0.15} color="#ffe9f2" />
+      <fogExp2 attach="fog" args={['#cfd6df', 0.0011]} />
+      <hemisphereLight ref={hemi} args={['#dfe6f5', '#8a9a6e', 0.55]} />
       <directionalLight
         ref={sun}
         castShadow={q.shadows}
@@ -50,13 +53,8 @@ export function Lighting({ q }: { q: QualityProfile }) {
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
       />
-      {/* local, file-free environment map for gold & glossy reflections */}
-      <Environment resolution={128} frames={1} background={false}>
-        <Lightformer intensity={2.2} color="#ffe2c0" position={[0, 6, -8]} scale={[12, 4, 1]} />
-        <Lightformer intensity={1.4} color="#d9c8ff" position={[-8, 2, 4]} scale={[6, 6, 1]} rotation-y={Math.PI / 3} />
-        <Lightformer intensity={1.2} color="#bfe3cf" position={[8, -2, 2]} scale={[6, 3, 1]} rotation-y={-Math.PI / 3} />
-        <Lightformer form="ring" intensity={3} color="#fff4e0" position={[0, 8, 6]} scale={2} />
-      </Environment>
+      {/* CC0 Poly Haven sunset HDRI: real-world reflections and bounce light */}
+      <Environment files={hdri} background={false} />
     </>
   );
 }

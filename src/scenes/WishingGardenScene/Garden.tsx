@@ -1,9 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { glowTexture } from '../shared/textures';
 import { globalUniforms } from '../shared/uniforms';
-import { mulberry32 } from '../../utils/random';
 
 /** Floating fabric ribbons in the six pastel dress-code colours. */
 export function FabricRibbons({ position }: { position: [number, number, number] }) {
@@ -44,34 +42,6 @@ export function FabricRibbons({ position }: { position: [number, number, number]
           </mesh>
         );
       })}
-    </group>
-  );
-}
-
-/** Each wish becomes a glowing orb that rises and settles in a slow constellation. */
-export function WishOrbs({ position, count }: { position: [number, number, number]; count: number }) {
-  const ref = useRef<THREE.Group>(null);
-  const n = Math.min(40, count + 6);
-  const data = useMemo(() => {
-    const r = mulberry32(8);
-    return Array.from({ length: 40 }, () => ({ a: r() * Math.PI * 2, rad: 1.5 + r() * 6, h: 3 + r() * 7, sp: 0.2 + r() * 0.4, c: ['#ffe6a8', '#f6c6e6', '#cfe0ff', '#c8f2dc'][Math.floor(r() * 4)] }));
-  }, []);
-  useFrame((st) => {
-    const t = st.clock.elapsedTime;
-    ref.current?.children.forEach((c, i) => {
-      const d = data[i];
-      c.position.set(Math.cos(d.a + t * d.sp * 0.2) * d.rad, d.h + Math.sin(t * d.sp + i) * 0.5, Math.sin(d.a + t * d.sp * 0.2) * d.rad);
-      const s = 1.1 + Math.sin(t * 2 + i) * 0.2;
-      c.scale.set(s, s, 1);
-    });
-  });
-  return (
-    <group ref={ref} position={position}>
-      {data.slice(0, n).map((d, i) => (
-        <sprite key={i}>
-          <spriteMaterial map={glowTexture()} color={d.c} transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
-        </sprite>
-      ))}
     </group>
   );
 }
