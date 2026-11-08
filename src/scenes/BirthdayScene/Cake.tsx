@@ -1,3 +1,4 @@
+import { Sparkles } from '@react-three/drei';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -23,8 +24,15 @@ export function celebrationAge(now: number) {
 function Frosting({ r, h, y, color, seed }: { r: number; h: number; y: number; color: string; seed: number }) {
   const drips = useRef<THREE.InstancedMesh>(null);
   const pearls = useRef<THREE.InstancedMesh>(null);
-  const mat = useMemo(() => new THREE.MeshPhysicalMaterial({ color, roughness: 0.42, sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.4 }), [color]);
-  const icing = useMemo(() => new THREE.MeshPhysicalMaterial({ color: '#fffaf3', roughness: 0.3, clearcoat: 0.6, sheen: 0.6 }), []);
+  // a faint warm self-glow keeps the pastel tiers readable under moonlight, swelling once the candles are lit
+  const mat = useMemo(() => new THREE.MeshPhysicalMaterial({ color, emissive: color, emissiveIntensity: 0.1, roughness: 0.42, sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.4 }), [color]);
+  const icing = useMemo(() => new THREE.MeshPhysicalMaterial({ color: '#fffaf3', emissive: '#ffe9cf', emissiveIntensity: 0.12, roughness: 0.3, clearcoat: 0.6, sheen: 0.6 }), []);
+  useFrame(() => {
+    const age = celebrationAge(performance.now() / 1000);
+    const lit = age < 0 ? 0 : Math.min(1, age / 1.6);
+    mat.emissiveIntensity = 0.1 + lit * 0.22;
+    icing.emissiveIntensity = 0.12 + lit * 0.3;
+  });
   const gold = useMemo(() => new THREE.MeshStandardMaterial({ color: GOLD, metalness: 1, roughness: 0.22 }), []);
   const nDrips = Math.round(r * 18);
   const nPearls = Math.round(r * 30);
@@ -302,7 +310,27 @@ export function Cake({ position }: { position: [number, number, number] }) {
         <Candle key={i} index={i} angle={(i / 7) * Math.PI * 2 + 0.3} radius={0.52} y={topY} />
       ))}
       <pointLight ref={light} position={[0, topY + 1, 0]} color="#ffbf7a" distance={9} decay={1.8} />
+      <WishSparkles top={topY} />
       <Balloons />
+    </group>
+  );
+}
+
+/**
+ * Golden wish-sparks that drift up from the flames once the candles are lit.
+ * Always mounted (so it is compiled up front) and simply grown in, never added mid-scene.
+ */
+function WishSparkles({ top }: { top: number }) {
+  const g = useRef<THREE.Group>(null);
+  useFrame(() => {
+    const age = celebrationAge(performance.now() / 1000);
+    const k = age < 0 ? 0.0001 : Math.min(1, age / 1.4);
+    g.current?.scale.setScalar(Math.max(0.0001, k));
+  });
+  return (
+    <group ref={g} position={[0, top + 1.6, 0]} scale={0.0001}>
+      <Sparkles count={46} scale={[3.2, 3.4, 3.2]} size={5} speed={0.45} color="#ffd89a" opacity={0.9} noise={0.6} />
+      <Sparkles count={24} scale={[5, 2, 5]} size={3.5} speed={0.3} color="#f6c6e6" opacity={0.8} />
     </group>
   );
 }

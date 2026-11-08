@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { INTRO_PATH, STATIONS } from '../../config/worldLayout';
+import { INTRO_PATH, LANDMARKS, STATIONS } from '../../config/worldLayout';
 import { useMagic, world } from '../../app/store';
 import { globalUniforms } from './uniforms';
 
@@ -36,6 +36,9 @@ export const frameAt = (t: number) => blendStations(t, (s) => s.frame, (a, b, e)
 const tmpDir = new THREE.Vector3();
 const tmpRight = new THREE.Vector3();
 const tmpUp = new THREE.Vector3();
+const cakePos = new THREE.Vector3();
+// the cake top sits ~4.5 above its terrace; aim between the tiers and the flames
+const CAKE_LOOK = new THREE.Vector3(LANDMARKS.cake[0], 4.3, LANDMARKS.cake[2]);
 
 /**
  * The only thing that moves the camera. Intro: follows the intro spline by
@@ -82,9 +85,23 @@ export function CameraRig() {
         // step back a little so the subject fits a narrow screen
         target.add(tmpDir.copy(target).sub(targetLook).normalize().multiplyScalar(3));
       }
+      // "Light the candles": glide in to a slow orbit around the cake while the panel steps aside
+      const want = world.cakeFocus && Math.abs(t - 1) < 0.7 ? 1 : 0;
+      world.cakeFocusW += (want - world.cakeFocusW) * (1 - Math.exp(-dt * 1.4));
+      const w = world.cakeFocusW * world.cakeFocusW * (3 - 2 * world.cakeFocusW);
+      if (w > 0.001) {
+        const age = reducedMotion ? 0 : Math.min(9, st.clock.elapsedTime - world.cakeFocusStart);
+        const a = 0.42 - age * 0.05;
+        const r = portrait ? 10 : 8.2;
+        cakePos.set(CAKE_LOOK.x + Math.sin(a) * r, 6.2 + Math.sin(age * 0.6) * 0.15, CAKE_LOOK.z + Math.cos(a) * r);
+        target.lerp(cakePos, w);
+        targetLook.lerp(CAKE_LOOK, w);
+      }
       // Re-aim so the subject lands where the text panel isn't: beside it on
-      // desktop, above the bottom sheet on phones.
-      const [fx, fy] = portrait ? [0, 0.42] : frameAt(t);
+      // desktop, above the bottom sheet on phones. Centred during the cake close-up.
+      const [fx0, fy0] = portrait ? [0, 0.42] : frameAt(t);
+      const fx = fx0 * (1 - w);
+      const fy = fy0 * (1 - w);
       tmpDir.copy(targetLook).sub(target);
       const dist = tmpDir.length();
       tmpDir.normalize();

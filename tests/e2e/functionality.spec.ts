@@ -148,11 +148,11 @@ test.describe('D · functionality', () => {
     await page.getByRole('button', { name: 'Light the birthday cake candles' }).click({ force: true });
 
     await centre(page, 'details');
-    await page.getByRole('button', { name: 'Tap the glowing mushroom' }).click({ force: true });
+    await page.getByRole('button', { name: 'Tap the glowing mushroom' }).dispatchEvent('click'); // the camera may still be gliding in
     await saw('Mushroom magic');
 
     await centre(page, 'countdown');
-    await page.getByRole('button', { name: 'A hidden star' }).click({ force: true });
+    await page.getByRole('button', { name: 'A hidden star' }).dispatchEvent('click'); // the camera may still be gliding in
     await saw('A secret star!');
 
     const clicks = () => page.evaluate(() => window.__MAGIC__!.state().butterflyClicks);

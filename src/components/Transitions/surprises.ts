@@ -1,4 +1,29 @@
-import { useMagic } from '../../app/store';
+import { useMagic, world } from '../../app/store';
+
+let focusTimer: ReturnType<typeof setTimeout> | undefined;
+let focusScroll: (() => void) | undefined;
+
+/** Hand the screen to the cake for a few seconds: the camera glides in and the panel steps aside. */
+function focusCake() {
+  endCakeFocus();
+  world.cakeFocus = 1;
+  world.cakeFocusStart = world.time; // same clock as the camera rig
+  document.documentElement.classList.add('cake-focus');
+  focusTimer = setTimeout(endCakeFocus, 7500);
+  const y0 = window.scrollY;
+  focusScroll = () => {
+    if (Math.abs(window.scrollY - y0) > 60) endCakeFocus();
+  };
+  window.addEventListener('scroll', focusScroll, { passive: true });
+}
+
+export function endCakeFocus() {
+  world.cakeFocus = 0;
+  document.documentElement.classList.remove('cake-focus');
+  clearTimeout(focusTimer);
+  if (focusScroll) window.removeEventListener('scroll', focusScroll);
+  focusScroll = undefined;
+}
 import { emitBurst } from '../../animations/particleEffects/bursts';
 import { audio } from '../../services/audioEngine';
 import { LANDMARKS } from '../../config/worldLayout';
@@ -18,6 +43,7 @@ export const surprises = {
   mushroomAt: -10,
   cake() {
     useMagic.getState().celebrate();
+    focusCake();
     emitBurst([LANDMARKS.cake[0], 5.2, LANDMARKS.cake[2]], '#ffe2a6', 260, 5);
     emitBurst([LANDMARKS.cake[0], 4.2, LANDMARKS.cake[2]], '#f6c6e6', 160, 3.5);
     audio.play('reveal');

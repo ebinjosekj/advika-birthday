@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { makeNoise3 } from '../../utils/random';
 import { useAssetTexture } from './assets';
-import { useMagic } from '../../app/store';
 
 /** Height of an island's top surface at local (x,z); shared by placement code. */
 export interface FlatZone {
@@ -86,8 +85,7 @@ interface IslandProps {
 }
 
 export function Island({ position, radius, depth, seed, flat, receiveShadow }: IslandProps) {
-  // phones get a lighter mesh (≈2.8× fewer vertices) — the silhouette barely changes
-  const geo = useMemo(() => makeIslandGeometry(radius, depth, seed, flat, useMagic.getState().quality === 'low' ? 18 : 30), [radius, depth, seed, flat]);
+  const geo = useMemo(() => makeIslandGeometry(radius, depth, seed, flat, 30), [radius, depth, seed, flat]);
   const rock = useAssetTexture('nRock', { repeat: Math.max(4, Math.round(radius / 3)) });
   return (
     <mesh geometry={geo} position={position} receiveShadow={receiveShadow} castShadow={false}>

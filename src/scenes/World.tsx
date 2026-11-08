@@ -6,7 +6,7 @@ import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { useMagic, world } from '../app/store';
 import { QUALITY_PROFILES, type QualityProfile } from '../utils/quality';
-import { ISLANDS, LANDMARKS, STATIONS } from '../config/worldLayout';
+import { INTRO_PATH, ISLANDS, LANDMARKS, STATIONS } from '../config/worldLayout';
 import { SkyDome } from './shared/Sky';
 import { Cloudscape } from './shared/Clouds';
 import { DistantMountains } from './shared/Mountains';
@@ -360,7 +360,7 @@ function Warmup({ onReady }: { onReady?: () => void }) {
       ready.current?.();
     };
     // never hold the opening back for a slow shader compiler
-    const guard = setTimeout(fire, 5000);
+    const guard = setTimeout(fire, 9000);
     (async () => {
       await frame();
       try {
@@ -375,6 +375,28 @@ function Warmup({ onReady }: { onReady?: () => void }) {
         await gl.compileAsync(scene, camera);
       } catch {
         /* fall back to lazy compile */
+      }
+      // Pre-draw the whole journey from every viewpoint the story visits, behind the
+      // night-sky backdrop. Mobile GPUs upload meshes and finish linking shaders on
+      // first *draw*, not on compile — doing it here is what stops the fairy's flight
+      // from hitching when a new island swings into view.
+      try {
+        const probe = new THREE.PerspectiveCamera(80, (camera as THREE.PerspectiveCamera).aspect || 1, 0.1, 2000);
+        const shots: [readonly number[], readonly number[]][] = [
+          ...INTRO_PATH.pos.map((p, i) => [p, INTRO_PATH.look[i]] as [readonly number[], readonly number[]]),
+          ...STATIONS.map((st) => [st.pos, st.look] as [readonly number[], readonly number[]]),
+        ];
+        for (let i = 0; i < shots.length; i++) {
+          if (cancelled || fired) break;
+          const [p, l] = shots[i];
+          probe.position.set(p[0], p[1], p[2]);
+          probe.lookAt(l[0], l[1], l[2]);
+          probe.updateMatrixWorld();
+          gl.render(scene, probe);
+          if (i % 3 === 2) await frame();
+        }
+      } catch {
+        /* purely an optimisation */
       }
       for (let i = 0; i < 3; i++) await frame();
       fire();

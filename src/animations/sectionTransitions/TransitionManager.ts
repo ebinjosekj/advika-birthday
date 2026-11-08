@@ -95,13 +95,14 @@ class TransitionManagerImpl {
       }
     };
     if (reduced) {
-      window.scrollTo({ top: target === 0 ? 0 : (target as HTMLElement).offsetTop, behavior: 'auto' });
+      window.scrollTo({ top: target === 0 ? 0 : landingY(target as HTMLElement), behavior: 'auto' });
       done();
       return;
     }
-    const distance = Math.abs((target === 0 ? 0 : (target as HTMLElement).getBoundingClientRect().top));
+    const y = target === 0 ? 0 : landingY(target as HTMLElement);
+    const distance = Math.abs(y - window.scrollY);
     this.scrollTween = gsap.to(window, {
-      scrollTo: { y: target, autoKill: true },
+      scrollTo: { y, autoKill: true },
       duration: Math.min(2.4, 0.7 + distance / 2600),
       ease: 'power2.inOut',
       overwrite: true,
@@ -129,6 +130,26 @@ class TransitionManagerImpl {
     this.triggers.forEach((t) => t.kill());
     this.triggers = [];
   }
+}
+
+/**
+ * Where to stop for a chapter: centred (that is where its camera shot is framed),
+ * then nudged so its panel sits fully on screen, clear of the nav bar and the date chip.
+ */
+function landingY(section: HTMLElement) {
+  const ih = window.innerHeight;
+  const top = section.getBoundingClientRect().top + window.scrollY;
+  let y = top + (section.offsetHeight - ih) / 2;
+  const panel = section.querySelector<HTMLElement>('.panel');
+  if (panel) {
+    const r = panel.getBoundingClientRect();
+    const pTop = r.top + window.scrollY;
+    const pBottom = r.bottom + window.scrollY;
+    if (pBottom - y > ih - 80) y = pBottom - ih + 80;
+    if (pTop - y < 84) y = pTop - 84;
+  }
+  const max = document.documentElement.scrollHeight - ih;
+  return Math.max(0, Math.min(max, Math.round(y)));
 }
 
 export const TransitionManager = new TransitionManagerImpl();

@@ -87,6 +87,10 @@ export const world = {
   mood: 0,
   camera: { x: 0, y: 0, z: 0 },
   frames: 0,
+  /** Cake close-up after "Light the candles": target (0/1), smoothed weight, and start time (s). */
+  cakeFocus: 0,
+  cakeFocusW: 0,
+  cakeFocusStart: 0,
 };
 
 declare global {
