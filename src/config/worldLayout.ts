@@ -61,7 +61,7 @@ export interface Station {
   id: SectionId;
   pos: Vec3;
   look: Vec3;
-  /** 0 = afternoon, ~0.6 = sunset evening, 1 = moonlit night */
+  /** 0 = afternoon, ~0.7 = sunset, 1 = moonlit night (the story runs at night) */
   mood: number;
   fairy: Vec3;
   /** where the subject sits on screen (NDC, desktop) so it is never hidden behind the panel */
@@ -69,14 +69,14 @@ export interface Station {
 }
 
 export const STATIONS: Station[] = [
-  { id: 'home', pos: [0, 17, -30], look: [0, 16, -122], mood: 0.7, fairy: [9, 16, -56], frame: [0.42, 0.04] },
-  { id: 'birthday', pos: [7, 5.6, -82], look: [0, 3.2, -97], mood: 0.72, fairy: [-3.5, 5.4, -90], frame: [-0.4, 0.02] },
-  { id: 'countdown', pos: [-4, 50, -62], look: [8, 54, -190], mood: 0.95, fairy: [-9, 52, -82], frame: [0, 0.4] },
-  { id: 'details', pos: [-30, 8.5, -16], look: [-52, 5, -40], mood: 0.75, fairy: [-40, 9, -26], frame: [0.4, 0] },
-  { id: 'location', pos: [-46, 9, -30], look: [18, 7, -46], mood: 0.72, fairy: [-30, 10, -40], frame: [-0.38, 0] },
-  { id: 'dress-code', pos: [20, 6.5, -26], look: [36, 4.5, -46], mood: 0.7, fairy: [28, 8, -34], frame: [0.4, 0] },
-  { id: 'rsvp', pos: [18, 10, -60], look: [0, 13, -122], mood: 0.78, fairy: [9, 12, -76], frame: [-0.44, 0.08] },
-  { id: 'finale', pos: [26, 42, 36], look: [0, 6, -105], mood: 0.82, fairy: [0, 22, -118], frame: [0, 0.3] },
+  { id: 'home', pos: [0, 17, -30], look: [0, 16, -122], mood: 0.93, fairy: [9, 16, -56], frame: [0.42, 0.04] },
+  { id: 'birthday', pos: [7, 5.6, -82], look: [0, 3.2, -97], mood: 0.92, fairy: [-3.5, 5.4, -90], frame: [-0.4, 0.02] },
+  { id: 'countdown', pos: [-4, 50, -62], look: [8, 54, -190], mood: 1.0, fairy: [-9, 52, -82], frame: [0, 0.4] },
+  { id: 'details', pos: [-30, 8.5, -16], look: [-52, 5, -40], mood: 0.95, fairy: [-40, 9, -26], frame: [0.4, 0] },
+  { id: 'location', pos: [-46, 9, -30], look: [18, 7, -46], mood: 0.94, fairy: [-30, 10, -40], frame: [-0.38, 0] },
+  { id: 'dress-code', pos: [20, 6.5, -26], look: [36, 4.5, -46], mood: 0.92, fairy: [28, 8, -34], frame: [0.4, 0] },
+  { id: 'rsvp', pos: [18, 10, -60], look: [0, 13, -122], mood: 0.95, fairy: [9, 12, -76], frame: [-0.44, 0.08] },
+  { id: 'finale', pos: [26, 42, 36], look: [0, 6, -105], mood: 0.97, fairy: [0, 22, -118], frame: [0, 0.3] },
 ];
 
 /** Intro flight: clouds → book → island → forest → rainbow bridge → castle doors. */

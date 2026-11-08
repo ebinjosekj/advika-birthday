@@ -5,7 +5,7 @@ import { go } from '../Navigation/Nav';
 export function Finale() {
   return (
     <Chapter id="finale" align="center" labelledBy="finale-title" tall>
-      <div className="panel" style={{ background: 'rgba(251,245,234,.5)', maxWidth: 640 }}>
+      <div className="panel" style={{ maxWidth: 640 }}>
         <p className="h-sub" style={{ margin: '0 0 10px' }}>
           Every fairy tale needs a little magic…
         </p>

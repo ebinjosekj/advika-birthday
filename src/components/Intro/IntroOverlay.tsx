@@ -32,16 +32,29 @@ export function IntroOverlay() {
             transition={{ duration: 1.2, ease }}
             style={{ position: 'absolute', left: 0, right: 0, bottom: 'max(8vh, 40px)', textAlign: 'center', padding: '0 20px' }}
           >
-            <h1 className="display intro-title" style={{ fontSize: 'clamp(2.4rem, 6vw, 4.6rem)', fontStyle: 'italic', margin: '0 0 22px' }}>
-              {eventConfig.messages.bookTitle}
+            <h1 className="display intro-title" aria-label={eventConfig.messages.bookTitle} style={{ fontSize: 'clamp(2.4rem, 6vw, 4.6rem)', fontStyle: 'italic', margin: '0 0 22px' }}>
+              {eventConfig.messages.bookTitle.split('').map((ch, i) => (
+                <motion.span
+                  key={i}
+                  aria-hidden="true"
+                  initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ delay: 0.15 + i * 0.035, duration: 0.7, ease }}
+                  style={{ display: 'inline-block', whiteSpace: 'pre' }}
+                >
+                  {ch}
+                </motion.span>
+              ))}
             </h1>
-            <button type="button" className="btn btn-primary" onClick={() => IntroDirector.openBook()} data-testid="open-book" autoFocus style={{ fontSize: '1.05rem', padding: '1em 1.8em', letterSpacing: '0.08em' }}>
+            <button type="button" className="btn btn-primary shimmer" onClick={() => IntroDirector.openBook()} data-testid="open-book" autoFocus style={{ fontSize: '1.05rem', padding: '1em 1.8em', letterSpacing: '0.08em' }}>
               <BookOpen size={20} aria-hidden="true" /> OPEN THE MAGIC BOOK
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* golden flash as the camera dives into the book's light */}
+      {phase === 'journey' && <div className="intro-flash" aria-hidden="true" />}
       <AnimatePresence>
         {phase === 'reveal' && (
           <motion.div

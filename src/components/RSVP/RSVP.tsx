@@ -169,7 +169,7 @@ export function RSVP() {
           Will You Join Our Magical Celebration?
         </h2>
         <RsvpForm />
-        <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid rgba(58,42,78,.12)' }}>
+        <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,.14)' }}>
           <p className="fine" style={{ margin: '0 0 10px' }}>
             Prefer to call or message?
           </p>

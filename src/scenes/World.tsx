@@ -32,6 +32,7 @@ import { CelestialClock, HiddenStar } from './KingdomScene/Celestial';
 import { DetailArtifacts } from './EnchantedForestScene/Artifacts';
 import { GlowMushrooms } from './EnchantedForestScene/Mushrooms';
 import { FabricRibbons } from './WishingGardenScene/Garden';
+import { CastleMagic, FloatingDebris, Fireworks, Moon, ShootingStars } from './KingdomScene/NightLife';
 import { surprises } from '../components/Transitions/surprises';
 import { audio } from '../services/audioEngine';
 
@@ -73,6 +74,9 @@ const GLITTER_POS: [number, number, number] = [0, 14, -110];
 const SECRET_SCALE: [number, number, number] = [30, 20, 30];
 const SECRET_POS: [number, number, number] = [0, 20, -110];
 const NO_PERCHES: [number, number, number][] = [];
+const FOREST_LANTERNS: [number, number, number] = [ISLANDS.forest.pos[0], 1, ISLANDS.forest.pos[2]];
+const MEADOW_LANTERNS: [number, number, number] = [ISLANDS.meadow.pos[0], 0, ISLANDS.meadow.pos[2]];
+const ISLE_SPREAD: [number, number] = [44, 44];
 const cakeActive = () => (useMagic.getState().celebrateAt >= 0 ? 1 : 0);
 const bookActive = () => (world.intro.light > 0.5 && world.intro.cam < 0.5 ? 1 : 0);
 const mushroomAt = () => surprises.mushroomAt;
@@ -80,13 +84,12 @@ const mushroomAt = () => surprises.mushroomAt;
 function SurpriseHotspots() {
   const main = useMagic((s) => s.phase === 'main');
   const section = useMagic((s) => s.activeSection);
-  if (!main) return null;
   return (
     <>
-      <GuideButterfly />
-      {section === 'birthday' && <Hotspot position={[LANDMARKS.cake[0], 4.6, LANDMARKS.cake[2]]} label="Light the birthday cake candles" onActivate={surprises.cake} size={96} />}
-      {section === 'details' && <Hotspot position={[LANDMARKS.mushrooms[0], 2.2, LANDMARKS.mushrooms[2]]} label="Tap the glowing mushroom" onActivate={surprises.mushroom} size={64} />}
-      {section === 'countdown' && <Hotspot position={LANDMARKS.hiddenStar} label="A hidden star" onActivate={surprises.star} size={56} />}
+      <GuideButterfly active={main} />
+      {main && section === 'birthday' && <Hotspot position={[LANDMARKS.cake[0], 4.6, LANDMARKS.cake[2]]} label="Light the birthday cake candles" onActivate={surprises.cake} size={96} />}
+      {main && section === 'details' && <Hotspot position={[LANDMARKS.mushrooms[0], 2.2, LANDMARKS.mushrooms[2]]} label="Tap the glowing mushroom" onActivate={surprises.mushroom} size={64} />}
+      {main && section === 'countdown' && <Hotspot position={LANDMARKS.hiddenStar} label="A hidden star" onActivate={surprises.star} size={56} />}
     </>
   );
 }
@@ -99,7 +102,11 @@ function LiveHiddenStar() {
 
 function SecretSparkles() {
   const secretFound = useMagic((s) => s.secretFound);
-  return secretFound ? <Sparkles count={60} scale={SECRET_SCALE} position={SECRET_POS} size={10} speed={1} color="#ffd6f0" /> : null;
+  return (
+    <group scale={secretFound ? 1 : 0.0001}>
+      <Sparkles count={60} scale={SECRET_SCALE} position={SECRET_POS} size={10} speed={1} color="#ffd6f0" />
+    </group>
+  );
 }
 
 function Kingdom({ q }: { q: QualityProfile }) {
@@ -117,6 +124,8 @@ function Kingdom({ q }: { q: QualityProfile }) {
   return (
     <>
       <SkyDome />
+      <Moon />
+      <ShootingStars count={q.level === 'low' ? 2 : 4} />
       <DistantMountains />
       <Cloudscape total={q.clouds} />
       <DistantIslands />
@@ -138,6 +147,8 @@ function Kingdom({ q }: { q: QualityProfile }) {
       <Fireflies center={FOREST_FIREFLY_POS} spread={FOREST_FIREFLY_SPREAD} count={q.fireflies} seed={2} />
       <GlowMushrooms position={LANDMARKS.mushrooms} pulseAt={mushroomAt} />
       <DetailArtifacts position={LANDMARKS.detailArtifacts} />
+      <FloatingDebris center={ISLANDS.forest.pos} radius={ISLANDS.forest.radius} count={q.level === 'low' ? 6 : 10} seed={8} />
+      <SkyLanterns center={FOREST_LANTERNS} spread={ISLE_SPREAD} count={q.level === 'low' ? 6 : 12} rise={30} seed={14} />
 
       {/* ENV 3 — rainbow bridge */}
       <RainbowBridge />
@@ -148,6 +159,8 @@ function Kingdom({ q }: { q: QualityProfile }) {
       <Flowers areas={[areas.meadow]} count={Math.round(q.flowers * 0.35)} glow={0.9} scale={1.2} />
       <Trees areas={[areas.meadow]} count={Math.round(q.trees * 0.15)} palette={FOLIAGE.blossom} />
       <FabricRibbons position={LANDMARKS.fabrics} />
+      <FloatingDebris center={ISLANDS.meadow.pos} radius={ISLANDS.meadow.radius} count={q.level === 'low' ? 6 : 10} seed={12} />
+      <SkyLanterns center={MEADOW_LANTERNS} spread={ISLE_SPREAD} count={q.level === 'low' ? 6 : 12} rise={30} seed={15} />
       <WaterSurface position={MEADOW_POND} radius={4.2} />
       <Fireflies center={MEADOW_FIREFLY_POS} spread={MEADOW_FIREFLY_SPREAD} count={Math.round(q.fireflies * 0.8)} seed={5} color="#ffd6f0" />
       <ButterflySwarm count={Math.round(q.butterflies * 0.4)} center={SWARM_MEADOW} radius={10} height={4} seed={4} perches={NO_PERCHES} />
@@ -158,6 +171,9 @@ function Kingdom({ q }: { q: QualityProfile }) {
       <Flowers areas={[areas.castle]} count={Math.round(q.flowers * 0.25)} />
       <Trees areas={[areas.castle]} count={Math.round(q.trees * 0.3)} palette={FOLIAGE.blossom} />
       <Castle position={CASTLE_POS} />
+      <CastleMagic position={CASTLE_POS} />
+      <Fireworks />
+      <FloatingDebris center={ISLANDS.castle.pos} radius={ISLANDS.castle.radius} count={q.level === 'low' ? 8 : 14} seed={3} />
       <Waterfall position={FALL_W} rotationY={-Math.PI / 2} width={5} height={40} mistCount={Math.round(q.particles / 25)} />
       <Waterfall position={FALL_E} rotationY={Math.PI / 2} width={4} height={36} mistCount={Math.round(q.particles / 30)} />
       <Cake position={CAKE_POS} />
@@ -228,7 +244,7 @@ function StoryFairy() {
 }
 
 /** The guide butterfly hovers in the upper right of view; tapping it is a hidden game. */
-function GuideButterfly() {
+function GuideButterfly({ active }: { active: boolean }) {
   const g = useRef<THREE.Group>(null);
   const wl = useRef<THREE.Mesh>(null);
   const wr = useRef<THREE.Mesh>(null);
@@ -244,6 +260,7 @@ function GuideButterfly() {
     const t = st.clock.elapsedTime;
     const cam = st.camera;
     if (!g.current) return;
+    g.current.scale.setScalar(active ? 0.55 : 0.0001);
     cam.getWorldDirection(fwd);
     right.crossVectors(fwd, cam.up).normalize();
     upv.crossVectors(right, fwd).normalize();
@@ -275,7 +292,7 @@ function GuideButterfly() {
       <mesh ref={wl} geometry={geoL}>
         <meshStandardMaterial map={tex} transparent alphaTest={0.3} side={THREE.DoubleSide} emissive="#f0c890" emissiveIntensity={0.25} />
       </mesh>
-      <Hotspot position={[0, 0, 0]} label="The guide butterfly" onActivate={surprises.butterfly} size={52} />
+      {active && <Hotspot position={[0, 0, 0]} label="The guide butterfly" onActivate={surprises.butterfly} size={52} />}
     </group>
   );
 }
@@ -324,6 +341,43 @@ function AudioScene() {
   return null;
 }
 
+/**
+ * Runs once the world has mounted: compiles every material (async where the GPU
+ * supports it), uploads every texture, and renders a few frames — all while the
+ * still sky is showing — so the opening film never stalls on first use.
+ */
+function Warmup({ onReady }: { onReady?: () => void }) {
+  const { gl, scene, camera } = useThree();
+  const ready = useRef(onReady);
+  ready.current = onReady;
+  useEffect(() => {
+    let cancelled = false;
+    const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+    (async () => {
+      await frame();
+      try {
+        scene.traverse((o) => {
+          const mats = (o as THREE.Mesh).material;
+          (Array.isArray(mats) ? mats : mats ? [mats] : []).forEach((m) => {
+            Object.values(m as unknown as Record<string, unknown>).forEach((v) => {
+              if (v instanceof THREE.Texture) gl.initTexture(v);
+            });
+          });
+        });
+        await gl.compileAsync(scene, camera);
+      } catch {
+        /* fall back to lazy compile */
+      }
+      for (let i = 0; i < 3; i++) await frame();
+      if (!cancelled) ready.current?.();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gl, scene, camera]);
+  return null;
+}
+
 function FpsProbe() {
   const acc = useRef({ t: 0, n: 0 });
   useFrame((_, dt) => {
@@ -354,13 +408,12 @@ export default function World({ onReady }: { onReady?: () => void }) {
       camera={{ fov: 48, near: 0.1, far: 2000, position: [0, 74, 210] }}
       onCreated={({ gl, scene }) => {
         if (new URLSearchParams(location.search).has('debugScene')) (window as unknown as { __scene?: THREE.Scene }).__scene = scene;
-        gl.toneMappingExposure = 1.12;
-        gl.setClearColor('#f3dfe0');
+        gl.toneMappingExposure = 1.1;
+        gl.setClearColor('#0d1330');
         gl.domElement.setAttribute('aria-hidden', 'true');
         gl.domElement.style.touchAction = 'pan-y';
         gl.domElement.setAttribute('data-testid', 'world-canvas');
         if (window.__MAGIC__) window.__MAGIC__.renderInfo = () => ({ geometries: gl.info.memory.geometries, textures: gl.info.memory.textures, programs: gl.info.programs?.length ?? 0, calls: gl.info.render.calls });
-        requestAnimationFrame(() => onReady?.());
       }}
     >
       <PerformanceMonitor onDecline={() => setQuality(downgrade(useMagic.getState().quality))} flipflops={2} />
@@ -369,6 +422,7 @@ export default function World({ onReady }: { onReady?: () => void }) {
         <Lighting q={q} />
         <Kingdom q={q} />
         <Effects q={q} />
+        <Warmup onReady={onReady} />
       </Suspense>
       <CameraRig />
       <AudioScene />

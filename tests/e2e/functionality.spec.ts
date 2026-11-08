@@ -132,34 +132,36 @@ test.describe('D · functionality', () => {
   test('hidden surprises: cake, mushroom, star and the seven-tap butterfly', async ({ page }) => {
     const c = collect(page);
     await openMain(page);
-    await centre(page, 'birthday');
-    await page.getByTestId('light-candles').click();
-    await expect(page.getByTestId('toast')).toContainText('Make a wish!');
-    expect(await page.evaluate(() => window.__MAGIC__!.state().celebrateAt)).toBeGreaterThan(0);
-    await page.getByRole('button', { name: 'Light the birthday cake candles' }).click({ force: true });
-
-    await centre(page, 'details');
-    await page.getByRole('button', { name: 'Tap the glowing mushroom' }).click({ force: true });
-    await expect(page.getByTestId('toast')).toContainText('Mushroom magic');
-
-    await centre(page, 'countdown');
-    await page.getByRole('button', { name: 'A hidden star' }).click({ force: true });
-    await expect(page.getByTestId('toast')).toContainText('A secret star!');
-
-    // record every toast, since on a very slow renderer one can vanish (5.5 s) before we look
+    // record every toast as it appears: on a very slow renderer one can vanish (5.5 s) before we look
     await page.evaluate(() => {
       const w = window as unknown as { __toasts: string[] };
       w.__toasts = [];
       new MutationObserver(() => document.querySelectorAll('[data-testid=toast]').forEach((t) => w.__toasts.push(t.textContent ?? ''))).observe(document.body, { childList: true, subtree: true, characterData: true });
     });
-    const toasts = () => page.evaluate(() => (window as unknown as { __toasts: string[] }).__toasts);
+    const saw = (text: string) => expect.poll(async () => (await page.evaluate(() => (window as unknown as { __toasts: string[] }).__toasts)).some((t) => t.includes(text)), { timeout: 30_000 }).toBe(true);
+
+    await centre(page, 'birthday');
+    expect(await page.evaluate(() => window.__MAGIC__!.state().celebrateAt)).toBeLessThan(0); // candles start unlit
+    await page.getByTestId('light-candles').click();
+    await saw('Make a wish!');
+    expect(await page.evaluate(() => window.__MAGIC__!.state().celebrateAt)).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Light the birthday cake candles' }).click({ force: true });
+
+    await centre(page, 'details');
+    await page.getByRole('button', { name: 'Tap the glowing mushroom' }).click({ force: true });
+    await saw('Mushroom magic');
+
+    await centre(page, 'countdown');
+    await page.getByRole('button', { name: 'A hidden star' }).click({ force: true });
+    await saw('A secret star!');
+
     const clicks = () => page.evaluate(() => window.__MAGIC__!.state().butterflyClicks);
     const fly = page.getByRole('button', { name: 'The guide butterfly' });
     // it floats with the camera, so click without waiting for it to stand still
     for (let i = 0; i < 12 && (await clicks()) < 7; i++) await fly.click({ force: true });
     expect(await clicks()).toBe(7);
-    await expect.poll(async () => (await toasts()).some((t) => t.includes('Happy 7th birthday, Advika!'))).toBe(true);
-    await expect.poll(async () => (await toasts()).some((t) => t.includes('You discovered Advika’s secret magic!'))).toBe(true);
+    await saw('Happy 7th birthday, Advika!');
+    await saw('You discovered Advika’s secret magic!');
     expect(await page.evaluate(() => window.__MAGIC__!.state().secretFound)).toBe(true);
     expect(c.errors).toEqual([]);
   });

@@ -136,6 +136,94 @@ function pageEdgeTexture() {
   return t;
 }
 
+/** Concentric rings of tiny runes and stars, painted once. */
+function runeTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 1024;
+  const x = c.getContext('2d')!;
+  x.translate(512, 512);
+  x.strokeStyle = 'rgba(255,225,160,0.9)';
+  x.fillStyle = 'rgba(255,225,160,0.9)';
+  [470, 440, 300, 286].forEach((r, i) => {
+    x.lineWidth = i % 2 ? 2 : 5;
+    x.beginPath();
+    x.arc(0, 0, r, 0, Math.PI * 2);
+    x.stroke();
+  });
+  x.font = '34px serif';
+  x.textAlign = 'center';
+  const glyphs = '✦❋✧❀☾✶✺❂✹✵✷✸';
+  for (let i = 0; i < 36; i++) {
+    x.save();
+    x.rotate((i / 36) * Math.PI * 2);
+    x.fillText(glyphs[i % glyphs.length], 0, -448 + 12);
+    x.restore();
+  }
+  for (let i = 0; i < 7; i++) {
+    // seven-pointed star of lines for a seven-year-old
+    const a = (i / 7) * Math.PI * 2, b = ((i + 3) / 7) * Math.PI * 2;
+    x.lineWidth = 2.5;
+    x.beginPath();
+    x.moveTo(Math.sin(a) * 286, -Math.cos(a) * 286);
+    x.lineTo(Math.sin(b) * 286, -Math.cos(b) * 286);
+    x.stroke();
+  }
+  const g = x.createRadialGradient(0, 0, 0, 0, 0, 512);
+  g.addColorStop(0, 'rgba(255,220,150,0.18)');
+  g.addColorStop(1, 'rgba(255,220,150,0)');
+  x.fillStyle = g;
+  x.fillRect(-512, -512, 1024, 1024);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function beamMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    uniforms: { uT: { value: 0 }, uO: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `uniform float uT; uniform float uO; varying vec2 vUv;
+      void main(){
+        float rays = 0.6 + 0.4*sin(vUv.x*60.0 + uT*1.5) * sin(vUv.x*23.0 - uT);
+        float a = pow(vUv.y, 1.4) * rays * uO * 0.35;
+        gl_FragColor = vec4(vec3(1.0,0.86,0.6)*a, a);
+      }`,
+  });
+}
+
+/** Sparkles orbiting the book on tilted rings; they spiral outward as it opens. */
+export function orbitSparkles(n: number) {
+  const r = mulberry32(5);
+  const seed = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) seed.set([r(), r(), r(), r()], i * 4);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: { uT: { value: 0 }, uOpen: { value: 0 } },
+    vertexShader: `attribute vec4 aSeed; uniform float uT; uniform float uOpen; varying float vA;
+      void main(){
+        float ang = aSeed.x*6.2832 + uT*(0.35 + aSeed.y*0.5);
+        float rad = 2.6 + aSeed.z*1.6 + uOpen*4.0*aSeed.w;
+        float tilt = (aSeed.w - 0.5) * 1.2;
+        vec3 p = vec3(cos(ang)*rad, sin(ang)*rad*0.45 + sin(ang)*tilt, sin(ang)*rad*0.35 + uOpen*aSeed.y*3.0);
+        vec4 mv = modelViewMatrix*vec4(p,1.0);
+        vA = (0.5 + 0.5*sin(uT*3.0 + aSeed.x*40.0)) * (1.0 - uOpen*0.6);
+        gl_PointSize = (14.0 + aSeed.y*18.0) * 6.0 / -mv.z;
+        gl_Position = projectionMatrix*mv;
+      }`,
+    fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord-0.5); float a = smoothstep(0.5,0.0,d); a*=a*vA; gl_FragColor = vec4(vec3(1.0,0.88,0.62)*a, a); }`,
+  });
+  return { geometry: g, material };
+}
+
 export function MagicBook({ position }: { position: [number, number, number] }) {
   const [fontsReady, setFontsReady] = useState(false);
   useEffect(() => {
@@ -159,30 +247,57 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
   const gold = useMemo(() => new THREE.MeshStandardMaterial({ color: '#e2c07a', metalness: 1, roughness: 0.25 }), []);
   const edge = useMemo(() => new THREE.MeshStandardMaterial({ map: pageEdgeTexture(), roughness: 0.9, emissive: '#3a2a10', emissiveIntensity: 0.0 }), []);
   const paper = useMemo(() => new THREE.MeshStandardMaterial({ color: '#f8efdc', roughness: 0.92, side: THREE.DoubleSide, emissive: '#ffd99a', emissiveIntensity: 0 }), []);
-  const pageGeo = useMemo(() => {
-    const g = new THREE.PlaneGeometry(W - 0.12, H - 0.16, 12, 1);
-    g.translate((W - 0.12) / 2, 0, 0);
-    return g;
-  }, []);
+  const PAGES = 9;
+  const pageGeos = useMemo(
+    () =>
+      Array.from({ length: PAGES }, () => {
+        const g = new THREE.PlaneGeometry(W - 0.12, H - 0.16, 16, 1);
+        g.translate((W - 0.12) / 2, 0, 0);
+        return g;
+      }),
+    [],
+  );
+  const runeRing = useRef<THREE.Group>(null);
+  const runeMat = useMemo(() => new THREE.MeshBasicMaterial({ map: runeTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffd89a', toneMapped: false, side: THREE.DoubleSide }), []);
+  const beamMat = useMemo(() => beamMaterial(), []);
+  const orbit = useMemo(() => orbitSparkles(48), []);
 
   useFrame((st) => {
     const { book, pages: pg, light: lt } = world.intro;
     const t = st.clock.elapsedTime;
     if (root.current) {
-      // gentle hover; the book turns to face the camera as it opens
-      root.current.position.y = position[1] + Math.sin(t * 0.9) * 0.18 * (1 - book * 0.7);
-      root.current.rotation.set(-0.12 + Math.sin(t * 0.6) * 0.03, Math.sin(t * 0.4) * 0.12 * (1 - book), Math.sin(t * 0.7) * 0.03);
+      // gentle hover; before opening it lifts and tilts toward the reader (anticipation)
+      const lift = Math.min(1, book * 4);
+      const ease = lift * lift * (3 - 2 * lift);
+      root.current.position.y = position[1] + Math.sin(t * 0.9) * 0.18 * (1 - book * 0.7) + ease * 0.6;
+      root.current.rotation.set(-0.12 + Math.sin(t * 0.6) * 0.03 + ease * 0.16, Math.sin(t * 0.4) * 0.12 * (1 - book), Math.sin(t * 0.7) * 0.03);
       root.current.visible = world.intro.cam < 0.55;
     }
+    if (runeRing.current) {
+      runeRing.current.rotation.z = t * 0.12;
+      const s = 1 + lt * 0.35 + Math.sin(t * 1.4) * 0.015;
+      runeRing.current.scale.setScalar(s);
+      runeMat.opacity = 0.35 + Math.sin(t * 1.8) * 0.08 + lt * 0.6;
+    }
+    beamMat.uniforms.uT.value = t;
+    beamMat.uniforms.uO.value = lt;
+    orbit.material.uniforms.uT.value = t;
+    orbit.material.uniforms.uOpen.value = pg;
     if (cover.current) cover.current.rotation.y = -book * Math.PI * 0.96;
     pages.current.forEach((p, i) => {
       if (!p) return;
       const local = Math.min(1, Math.max(0, pg * 1.6 - i * 0.12));
       const e = local * local * (3 - 2 * local);
-      p.rotation.y = -e * Math.PI * (0.9 - i * 0.04);
-      // paper bends while turning
-      const pos = (p.children[0] as THREE.Mesh).geometry.getAttribute('position') as THREE.BufferAttribute;
-      void pos;
+      p.rotation.y = -e * Math.PI * (0.92 - i * 0.035);
+      // paper curls while it is mid-turn, flattening as it lands
+      const g = pageGeos[i];
+      const pos = g.getAttribute('position') as THREE.BufferAttribute;
+      const bend = Math.sin(e * Math.PI) * 0.55;
+      for (let k = 0; k < pos.count; k++) {
+        const u = pos.getX(k) / (W - 0.12);
+        pos.setZ(k, Math.sin(u * Math.PI * 0.85) * bend * u);
+      }
+      pos.needsUpdate = true;
     });
     paper.emissiveIntensity = lt * 1.6;
     edge.emissiveIntensity = lt * 0.8;
@@ -214,9 +329,9 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
           <boxGeometry args={[W - 0.08, H - 0.12, T - 0.14]} />
         </mesh>
         {/* turning pages */}
-        {Array.from({ length: 5 }, (_, i) => (
+        {pageGeos.map((g, i) => (
           <group key={i} ref={(el) => void (el && (pages.current[i] = el))} position={[0.02, 0, T / 2 - 0.08 - i * 0.002]}>
-            <mesh geometry={pageGeo} material={paper} />
+            <mesh geometry={g} material={paper} />
           </group>
         ))}
         {/* front cover on its hinge */}
@@ -235,6 +350,17 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
         <spriteMaterial map={glowTexture()} color="#ffe2a6" transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
       </sprite>
       <pointLight ref={light} position={[0, 0, 2]} color="#ffd89a" distance={30} decay={1.5} />
+      {/* rotating ring of glowing runes behind the book */}
+      <group ref={runeRing} position={[0, 0, -0.9]}>
+        <mesh material={runeMat}>
+          <planeGeometry args={[9, 9]} />
+        </mesh>
+      </group>
+      {/* shaft of light pouring out of the open pages toward the reader */}
+      <mesh material={beamMat} position={[0, 0, T / 2 + 2.6]} rotation={[-Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[2.6, 5.2, 32, 1, true]} />
+      </mesh>
+      <points geometry={orbit.geometry} material={orbit.material} frustumCulled={false} />
     </group>
   );
 }

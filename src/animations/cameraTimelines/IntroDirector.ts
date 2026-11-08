@@ -32,8 +32,8 @@ class IntroDirectorImpl {
     }
     this.tl = gsap.timeline({ defaults: { ease: 'sine.inOut' } });
     this.tl.timeScale(this.speed);
-    this.tl.to(intro, { cam: 0.17, duration: 4.6, ease: 'power2.out' });
-    this.tl.call(() => useMagic.getState().setPhase('book'), [], 2.6);
+    this.tl.to(intro, { cam: 0.17, duration: 3.6, ease: 'power3.out' });
+    this.tl.call(() => useMagic.getState().setPhase('book'), [], 1.9);
   }
 
   openBook() {
@@ -53,9 +53,9 @@ class IntroDirectorImpl {
     this.tl = tl;
     tl.timeScale(this.speed);
     tl.to(intro, { cam: 0.24, duration: 0.6, ease: 'power1.inOut' }, 0);
-    tl.to(intro, { book: 1, duration: 1.5, ease: 'power3.inOut' }, 0);
-    tl.to(intro, { pages: 1, duration: 1.7, ease: 'power2.inOut' }, 0.45);
-    tl.to(intro, { light: 1, duration: 1.1, ease: 'power2.in' }, 0.8);
+    tl.to(intro, { book: 1, duration: 1.7, ease: 'power3.inOut' }, 0);
+    tl.to(intro, { pages: 1, duration: 1.9, ease: 'power2.inOut' }, 0.5);
+    tl.to(intro, { light: 1, duration: 1.2, ease: 'power2.in' }, 0.85);
     tl.call(() => emitBurst(LANDMARKS.book, '#ffe6a8', 240, 6), [], 1.35);
     tl.call(() => useMagic.getState().setPhase('journey'), [], 1.7);
     tl.call(() => audio.play('fairy'), [], 1.8);

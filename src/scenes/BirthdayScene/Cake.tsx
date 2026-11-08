@@ -145,6 +145,7 @@ function useFlameMaterial(index: number) {
 function Candle({ angle, radius, y, index }: { angle: number; radius: number; y: number; index: number }) {
   const flame = useFlameMaterial(index);
   const halo = useRef<THREE.Mesh>(null);
+  const fire = useRef<THREE.Group>(null);
   const tex = useMemo(() => {
     const t = candleTexture().clone();
     t.needsUpdate = true;
@@ -153,9 +154,17 @@ function Candle({ angle, radius, y, index }: { angle: number; radius: number; y:
   }, []);
   useFrame((st) => {
     const age = celebrationAge(performance.now() / 1000);
-    const boost = age < 0 ? 0 : Math.max(0, 1 - age / 9) * (age < 0.4 ? age / 0.4 : 1);
+    // unlit until the guest lights them; then each candle catches in turn, flares, and settles
+    const delay = index * 0.14;
+    const lit = age < 0 ? 0 : Math.min(1, Math.max(0, (age - delay) / 0.45));
+    const e = 1 - Math.pow(1 - lit, 3);
+    const boost = age < 0 ? 0 : Math.max(0, 1 - (age - delay) / 6) * e;
     flame.uniforms.uBoost.value = boost;
-    if (halo.current) halo.current.scale.setScalar(0.25 + boost * 0.35 + Math.sin(st.clock.elapsedTime * 9 + index) * 0.02);
+    if (fire.current) {
+      // kept "visible" at near-zero scale so its shader is compiled up front (no hitch on ignition)
+      fire.current.scale.setScalar(Math.max(0.001, e));
+    }
+    if (halo.current) halo.current.scale.setScalar(Math.max(0.001, e * (0.25 + boost * 0.35 + Math.sin(st.clock.elapsedTime * 9 + index) * 0.02)));
   });
   const x = Math.cos(angle) * radius, z = Math.sin(angle) * radius;
   return (
@@ -168,12 +177,14 @@ function Candle({ angle, radius, y, index }: { angle: number; radius: number; y:
         <cylinderGeometry args={[0.006, 0.006, 0.06, 4]} />
         <meshBasicMaterial color="#3a2a2a" />
       </mesh>
-      <mesh position={[0, 0.72, 0]} material={flame}>
-        <sphereGeometry args={[0.05, 12, 10]} />
-      </mesh>
-      <mesh position={[0, 0.79, 0]} material={flame} scale={[1, 2.6, 1]}>
-        <coneGeometry args={[0.04, 0.1, 12, 1, true]} />
-      </mesh>
+      <group ref={fire} position={[0, 0.66, 0]} scale={0.001}>
+        <mesh position={[0, 0.06, 0]} material={flame}>
+          <sphereGeometry args={[0.05, 12, 10]} />
+        </mesh>
+        <mesh position={[0, 0.13, 0]} material={flame} scale={[1, 2.6, 1]}>
+          <coneGeometry args={[0.04, 0.1, 12, 1, true]} />
+        </mesh>
+      </group>
       <mesh ref={halo} position={[0, 0.76, 0]}>
         <sphereGeometry args={[1, 12, 10]} />
         <meshBasicMaterial color="#ffb766" transparent opacity={0.06} depthWrite={false} blending={THREE.AdditiveBlending} />
@@ -259,8 +270,9 @@ export function Cake({ position }: { position: [number, number, number] }) {
   const topY = y;
   useFrame((st) => {
     const age = celebrationAge(performance.now() / 1000);
+    const lit = age < 0 ? 0 : Math.min(1, age / 1.2);
     const boost = age < 0 ? 0 : Math.max(0, 1 - age / 9);
-    if (light.current) light.current.intensity = (3 + boost * 10) * (0.92 + Math.sin(st.clock.elapsedTime * 12) * 0.05);
+    if (light.current) light.current.intensity = lit * (4 + boost * 10) * (0.92 + Math.sin(st.clock.elapsedTime * 12) * 0.05);
   });
   return (
     <group position={position}>

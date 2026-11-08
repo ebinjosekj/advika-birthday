@@ -246,8 +246,9 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
     const r = root.current;
     if (!r) return;
     const visible = driver.target(t, tmpV);
-    r.visible = visible;
     if (!visible) {
+      // parked at near-zero scale rather than .visible=false so shaders stay precompiled
+      r.scale.setScalar(0.0001);
       initialised.current = false;
       return;
     }

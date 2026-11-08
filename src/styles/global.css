@@ -36,7 +36,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  background: #f3dfe0;
+  background: #0f1226;
 }
 html.scroll-locked,
 html.scroll-locked body {
@@ -702,7 +702,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: linear-gradient(180deg, #1f2a4d 0%, #4b4a77 42%, #b98a8f 78%, #e9b48b 100%);
+  background: linear-gradient(180deg, #050816 0%, #0d1330 45%, #1c1f45 80%, #2a2850 100%);
 }
 
 /* static fallback world (no WebGL) */
@@ -812,13 +812,264 @@ body {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .panel {
-    background: rgba(250, 247, 242, 0.93);
-  }
+}
+
+/* ═════════ Night glass: see-through panels so the story stays visible ═════════ */
+:root {
+  --glass: rgba(14, 14, 34, 0.3);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --on-glass: #f8f2ff;
+  --on-glass-soft: #ddd3f2;
+}
+.panel,
+.panel.night {
+  color: var(--on-glass);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02) 40%), var(--glass);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 30px 60px -30px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px) saturate(1.35);
+  -webkit-backdrop-filter: blur(10px) saturate(1.35);
+  text-shadow: 0 1px 2px rgba(5, 4, 20, 0.45);
+}
+.panel .display,
+.panel h1,
+.panel h2 {
+  color: #fff9f0;
+  text-shadow: 0 2px 18px rgba(255, 214, 160, 0.18), 0 1px 2px rgba(5, 4, 20, 0.5);
+}
+.panel .h-sub,
+.panel .fine,
+.panel .detail .k,
+.panel .detail .hint {
+  color: var(--on-glass-soft);
+}
+.panel .detail {
+  color: var(--on-glass);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.panel .detail:hover,
+.panel .detail:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}
+.panel .detail .v span {
+  color: var(--on-glass) !important;
+}
+.panel .detail svg {
+  color: #f3dfa8 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 220, 160, 0.35));
+}
+.panel .input {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+  text-shadow: none;
+}
+.panel .input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+.panel .choice label,
+.panel .icon-btn {
+  color: var(--on-glass);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.panel .choice label:has(input:checked) {
+  background: rgba(214, 190, 255, 0.22);
+  border-color: #cdb5ff;
+}
+.panel .btn-ghost {
+  color: var(--on-glass);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.panel .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.panel .btn-primary {
+  background: linear-gradient(180deg, #e8cf94, #c49a52);
+  color: #23183a;
+  text-shadow: none;
+  box-shadow: 0 10px 24px -10px rgba(230, 190, 110, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.panel .error {
+  color: #ffc2d4;
+}
+.panel .badge {
+  background: rgba(230, 204, 148, 0.18);
+  color: #f6e3b6;
+}
+.panel address strong {
+  color: #fff9f0;
+}
+.panel .swatch span {
+  text-shadow: none;
+}
+.panel :focus-visible {
+  outline-color: #ffe08a;
+}
+.count .cell {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* dark glass chrome to match the night */
+.nav {
+  background: rgba(14, 14, 34, 0.42);
+  border-color: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+}
+.nav .brand,
+.nav a.link {
+  color: #f6efff;
+}
+.nav a.link:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.nav a.link[aria-current='true'] {
+  background: rgba(214, 190, 255, 0.22);
+}
+.nav .icon-btn,
+.chip .btn-ghost,
+[data-testid='back-to-top'] {
+  color: #f6efff !important;
+  background: rgba(14, 14, 34, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.sheet {
+  background: rgba(16, 15, 36, 0.92);
+}
+.sheet a {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6efff;
+}
+.volume {
+  background: rgba(16, 15, 36, 0.94);
+  color: #f6efff;
+}
+
+/* phones: no blur (performance) — a slightly deeper tint keeps the text readable */
+@media (max-width: 760px), (hover: none) {
+  .panel,
   .panel.night {
-    background: rgba(24, 22, 40, 0.92);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02) 40%), rgba(12, 12, 30, 0.5);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
   .nav {
-    background: rgba(250, 247, 242, 0.94);
+    background: rgba(14, 14, 34, 0.7);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ───────── opening film polish ───────── */
+.intro .btn-primary {
+  background: linear-gradient(180deg, #e8cf94, #c49a52);
+  color: #23183a;
+  box-shadow: 0 0 0 1px rgba(255, 240, 200, 0.5), 0 12px 40px -8px rgba(255, 200, 110, 0.6);
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: -40% auto -40% -60%;
+  width: 40%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: shimmer 2.8s ease-in-out 1.4s infinite;
+}
+@keyframes shimmer {
+  0% { left: -60%; }
+  55%, 100% { left: 130%; }
+}
+.intro-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 246, 220, 1), rgba(255, 214, 150, 0.85) 45%, rgba(255, 200, 140, 0) 80%);
+  animation: intro-flash 1.6s ease-out forwards;
+}
+@keyframes intro-flash {
+  0% { opacity: 0; }
+  22% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+/* ───────── chapter entrances ───────── */
+.chapter .panel {
+  opacity: 0;
+  transform: translateY(28px) scale(0.975);
+  transition:
+    opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.chapter[data-align='right'] .panel {
+  transform: translateX(26px) scale(0.975);
+}
+.chapter .panel > *,
+.chapter .details > *,
+.chapter .swatches > *,
+.chapter .count > *,
+.chapter .btn-row > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.chapter.in-view .panel,
+.chapter.in-view .panel > *,
+.chapter.in-view .details > *,
+.chapter.in-view .swatches > *,
+.chapter.in-view .count > *,
+.chapter.in-view .btn-row > * {
+  opacity: 1;
+  transform: none;
+}
+.chapter.in-view .panel > *:nth-child(1) { transition-delay: 0.12s; }
+.chapter.in-view .panel > *:nth-child(2) { transition-delay: 0.2s; }
+.chapter.in-view .panel > *:nth-child(3) { transition-delay: 0.28s; }
+.chapter.in-view .panel > *:nth-child(4) { transition-delay: 0.36s; }
+.chapter.in-view .panel > *:nth-child(5) { transition-delay: 0.44s; }
+.chapter.in-view .panel > *:nth-child(n + 6) { transition-delay: 0.52s; }
+.chapter.in-view .details > *:nth-child(1),
+.chapter.in-view .swatches > *:nth-child(1),
+.chapter.in-view .count > *:nth-child(1),
+.chapter.in-view .btn-row > *:nth-child(1) { transition-delay: 0.4s; }
+.chapter.in-view .details > *:nth-child(2),
+.chapter.in-view .swatches > *:nth-child(2),
+.chapter.in-view .count > *:nth-child(2),
+.chapter.in-view .btn-row > *:nth-child(2) { transition-delay: 0.5s; }
+.chapter.in-view .details > *:nth-child(3),
+.chapter.in-view .swatches > *:nth-child(3),
+.chapter.in-view .count > *:nth-child(3),
+.chapter.in-view .btn-row > *:nth-child(3) { transition-delay: 0.6s; }
+.chapter.in-view .details > *:nth-child(4),
+.chapter.in-view .swatches > *:nth-child(4),
+.chapter.in-view .count > *:nth-child(4) { transition-delay: 0.7s; }
+.chapter.in-view .swatches > *:nth-child(5) { transition-delay: 0.8s; }
+.chapter.in-view .swatches > *:nth-child(6) { transition-delay: 0.9s; }
+.chapter.in-view .cameo {
+  animation: cameo-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both;
+}
+@keyframes cameo-in {
+  from { transform: scale(0.6) rotate(-12deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter .panel,
+  .chapter .panel > *,
+  .chapter .details > *,
+  .chapter .swatches > *,
+  .chapter .count > *,
+  .chapter .btn-row > * {
+    opacity: 1;
+    transform: none;
   }
 }

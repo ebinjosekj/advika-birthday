@@ -70,7 +70,7 @@ export function CameraRig() {
       const c = Math.min(1, Math.max(0, world.intro.cam));
       curves.introPos.getPoint(c, target);
       curves.introLook.getPoint(c, targetLook);
-      mood = 0.64 + 0.06 * c; // the story opens at sunset
+      mood = 0.9 + 0.05 * c; // the story takes place on a moonlit night
       damp = reducedMotion ? 1000 : 3;
     } else {
       const n = STATIONS.length - 1;
