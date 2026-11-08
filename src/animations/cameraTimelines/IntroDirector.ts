@@ -24,16 +24,10 @@ class IntroDirectorImpl {
     const s = useMagic.getState();
     const intro = world.intro;
     Object.assign(intro, { cam: 0, book: 0, pages: 0, light: 0, fairy: 0, doors: 0, blend: 0 });
-    s.setPhase('sky');
-    if (s.reducedMotion) {
-      intro.cam = 0.17;
-      s.setPhase('book');
-      return;
-    }
-    this.tl = gsap.timeline({ defaults: { ease: 'sine.inOut' } });
-    this.tl.timeScale(this.speed);
-    this.tl.to(intro, { cam: 0.17, duration: 3, ease: 'power3.out' });
-    this.tl.call(() => useMagic.getState().setPhase('book'), [], 1.4);
+    // The title card has already played over the night sky, so open directly on
+    // the book: no camera glide through the clouds (that is where phones stuttered).
+    intro.cam = 0.17;
+    s.setPhase('book');
   }
 
   openBook() {

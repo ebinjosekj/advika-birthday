@@ -80,7 +80,8 @@ export const world = {
   /** Scroll-driven station parameter, 0 … STATIONS.length − 1. */
   t: 0,
   /** Intro parameters, all 0 … 1, tweened by the IntroDirector timeline. */
-  intro: { cam: 0, book: 0, pages: 0, light: 0, fairy: 0, doors: 0, blend: 0 },
+  // the story opens framed on the book (cam 0.17); the camera waits there during warm-up
+  intro: { cam: 0.17, book: 0, pages: 0, light: 0, fairy: 0, doors: 0, blend: 0 },
   /** Elapsed clock seconds, mirrored for DOM consumers. */
   time: 0,
   fps: 60,

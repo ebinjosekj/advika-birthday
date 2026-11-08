@@ -50,8 +50,9 @@ const CAKE_LOOK = new THREE.Vector3(LANDMARKS.cake[0], 4.3, LANDMARKS.cake[2]);
 export function CameraRig() {
   const curves = useCameraCurves();
   const { camera, size } = useThree();
-  const look = useRef(new THREE.Vector3(0, 66, 128));
-  const pos = useRef(new THREE.Vector3(...INTRO_PATH.pos[0]));
+  // start exactly on the book shot, so the world appears already framed — no glide
+  const look = useRef(curves.introLook.getPoint(0.17, new THREE.Vector3()));
+  const pos = useRef(curves.introPos.getPoint(0.17, new THREE.Vector3()));
   const mouse = useRef(new THREE.Vector2());
   const target = useMemo(() => new THREE.Vector3(), []);
   const targetLook = useMemo(() => new THREE.Vector3(), []);

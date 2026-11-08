@@ -59,7 +59,15 @@ export default function App() {
     };
   }, []);
 
-  const ready = fontsReady && (worldReady || worldFailed);
+  // let the opening title card finish its little animation before dissolving onto the book
+  const [titleDone, setTitleDone] = useState(() => new URLSearchParams(location.search).get('skipIntro') === '1');
+  useEffect(() => {
+    if (titleDone) return;
+    const t = setTimeout(() => setTitleDone(true), 3000);
+    return () => clearTimeout(t);
+  }, [titleDone]);
+
+  const ready = fontsReady && (worldReady || worldFailed) && titleDone;
 
   // Start the opening film once everything has compiled.
   useEffect(() => {

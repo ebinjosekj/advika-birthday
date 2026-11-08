@@ -704,7 +704,7 @@ body {
   z-index: 70;
   overflow: hidden;
   pointer-events: none;
-  background: radial-gradient(120% 70% at 76% 18%, rgba(120, 132, 200, 0.28), transparent 60%),
+  background: radial-gradient(120% 70% at 66% 16%, rgba(120, 132, 200, 0.28), transparent 60%),
     linear-gradient(180deg, #070a1c 0%, #10163a 48%, #262a55 78%, #3a3360 100%);
   transition: opacity 1.2s ease;
 }
@@ -1254,4 +1254,77 @@ body {
 .call-pill:focus-visible {
   background: rgba(255, 220, 160, 0.14);
   border-color: rgba(255, 224, 160, 0.7);
+}
+
+/* ───────── opening title card (pure CSS: smooth even while the 3D world prepares) ───────── */
+.boot-twinkle {
+  animation: boot-twinkle 3.2s ease-in-out infinite;
+}
+@keyframes boot-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+.boot-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-55%);
+  padding: 0 24px;
+  text-align: center;
+  color: #fbf3e4;
+}
+.boot-kicker {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 232, 196, 0.75);
+  opacity: 0;
+  animation: boot-rise 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s forwards;
+}
+.boot-title {
+  margin: 0;
+  font-size: clamp(2.6rem, 11vw, 5.2rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.05;
+  text-shadow: 0 0 28px rgba(255, 214, 150, 0.35);
+}
+.boot-title span {
+  display: inline-block;
+  white-space: pre;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: boot-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.boot-rule {
+  display: block;
+  width: 64px;
+  height: 1px;
+  margin: 20px auto 16px;
+  background: linear-gradient(90deg, transparent, #ffd98a, transparent);
+  transform: scaleX(0);
+  animation: boot-rule 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 1.5s forwards;
+}
+.boot-date {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  color: rgba(251, 243, 228, 0.82);
+  opacity: 0;
+  animation: boot-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 1.8s forwards;
+}
+@keyframes boot-rise {
+  to { opacity: 1; transform: none; }
+}
+@keyframes boot-rule {
+  to { transform: scaleX(1); }
+}
+/* the card drifts gently up and away as it dissolves onto the book */
+.boot-out .boot-card {
+  transition: transform 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(-75%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-twinkle, .boot-kicker, .boot-title span, .boot-rule, .boot-date { animation: none; opacity: 1; transform: none; }
 }
