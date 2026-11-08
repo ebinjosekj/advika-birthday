@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { makeNoise3 } from '../../utils/random';
 import { useAssetTexture } from './assets';
+import { useMagic } from '../../app/store';
 
 /** Height of an island's top surface at local (x,z); shared by placement code. */
 export interface FlatZone {
@@ -32,8 +33,8 @@ export function islandSurface(seed: number, radius: number, flat: readonly FlatZ
  * gently rolling meadow and whose lower half is stretched into a stalactite of
  * layered, eroded rock. Vertex colours carry grass → soil → strata.
  */
-export function makeIslandGeometry(radius: number, depth: number, seed: number, flat: readonly FlatZone[] = []) {
-  const g = new THREE.IcosahedronGeometry(1, 30);
+export function makeIslandGeometry(radius: number, depth: number, seed: number, flat: readonly FlatZone[] = [], detail = 30) {
+  const g = new THREE.IcosahedronGeometry(1, detail);
   const noise = makeNoise3(seed);
   const surf = islandSurface(seed, radius, flat);
   const pos = g.getAttribute('position') as THREE.BufferAttribute;
@@ -85,7 +86,8 @@ interface IslandProps {
 }
 
 export function Island({ position, radius, depth, seed, flat, receiveShadow }: IslandProps) {
-  const geo = useMemo(() => makeIslandGeometry(radius, depth, seed, flat), [radius, depth, seed, flat]);
+  // phones get a lighter mesh (≈2.8× fewer vertices) — the silhouette barely changes
+  const geo = useMemo(() => makeIslandGeometry(radius, depth, seed, flat, useMagic.getState().quality === 'low' ? 18 : 30), [radius, depth, seed, flat]);
   const rock = useAssetTexture('nRock', { repeat: Math.max(4, Math.round(radius / 3)) });
   return (
     <mesh geometry={geo} position={position} receiveShadow={receiveShadow} castShadow={false}>

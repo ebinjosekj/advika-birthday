@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Environment } from '@react-three/drei';
+import { Environment, Lightformer } from '@react-three/drei';
 import { useAssetUrl } from './assets';
 import * as THREE from 'three';
 import { world } from '../../app/store';
@@ -18,7 +18,6 @@ export function Lighting({ q }: { q: QualityProfile }) {
   const sun = useRef<THREE.DirectionalLight>(null);
   const hemi = useRef<THREE.HemisphereLight>(null);
   const { scene, camera } = useThree();
-  const hdri = useAssetUrl('hdriSunset');
   useFrame(() => {
     const m = world.mood;
     if (scene.fog instanceof THREE.FogExp2) {
@@ -58,8 +57,24 @@ export function Lighting({ q }: { q: QualityProfile }) {
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
       />
-      {/* CC0 Poly Haven sunset HDRI: real-world reflections and bounce light */}
-      <Environment files={hdri} background={false} />
+      {q.level === 'low' ? <NightEnvLite /> : <HdriEnv />}
     </>
+  );
+}
+
+/** CC0 Poly Haven sunset HDRI: real-world reflections and bounce light. */
+function HdriEnv() {
+  const hdri = useAssetUrl('hdriSunset');
+  return <Environment files={hdri} background={false} />;
+}
+
+/** Phones: a tiny procedural moonlit environment — no EXR download or decode. */
+function NightEnvLite() {
+  return (
+    <Environment resolution={32} frames={1} background={false}>
+      <Lightformer form="rect" intensity={1.1} color="#9fb0ff" position={[0, 8, -6]} scale={[14, 6, 1]} />
+      <Lightformer form="rect" intensity={0.5} color="#ffbe8f" position={[0, -4, 8]} scale={[14, 4, 1]} />
+      <Lightformer form="ring" intensity={0.8} color="#e8ecff" position={[-8, 4, 0]} scale={3} />
+    </Environment>
   );
 }

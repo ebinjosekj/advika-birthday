@@ -27,6 +27,8 @@ useMagic.getState().init({
   ),
 });
 IntroDirector.configure(Number(params.get('introSpeed') ?? 1));
+// start fetching the 3D world right away, in parallel with React's first render
+if (gl.supported && params.get('nowebgl') !== '1') void import('./scenes/World');
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

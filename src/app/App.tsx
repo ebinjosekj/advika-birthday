@@ -3,6 +3,7 @@ import { useMagic } from './store';
 import { TransitionManager } from '../animations/sectionTransitions/TransitionManager';
 import { IntroDirector } from '../animations/cameraTimelines/IntroDirector';
 import { IntroOverlay } from '../components/Intro/IntroOverlay';
+import { NightBackdrop } from '../components/Intro/NightBackdrop';
 import { Nav } from '../components/Navigation/Nav';
 import { QuickDetails, BackToTop } from '../components/Navigation/QuickDetails';
 import { MagicToast } from '../components/ui/MagicToast';
@@ -72,12 +73,8 @@ export default function App() {
       <a className="skip-link" href="#rsvp" onClick={() => IntroDirector.skip()}>
         Skip to RSVP
       </a>
-      {!ready && (
-        // a still evening sky while the world compiles — no loading animation
-        <div className="boot" role="status" data-testid="boot">
-          <span className="sr-only">Opening the invitation</span>
-        </div>
-      )}
+      {/* the story's night sky, shown instantly and dissolved into the live world */}
+      <NightBackdrop hidden={ready} />
       {ready && !main && <IntroOverlay />}
       {main && <Nav />}
       <MagicToast />

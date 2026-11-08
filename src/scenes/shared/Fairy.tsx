@@ -1,3 +1,4 @@
+import { useMagic } from '../../app/store';
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -187,7 +188,7 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
       face: new THREE.MeshStandardMaterial({ map: faceTexture(), transparent: true, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2 }),
       hair: new THREE.MeshPhysicalMaterial({ color: HAIR, roughness: 0.38, sheen: 1, sheenColor: new THREE.Color('#ffe3c4'), clearcoat: 0.3 }),
       dress: new THREE.MeshPhysicalMaterial({ color: '#cbb4ec', roughness: 0.45, sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.35 }),
-      petal: new THREE.MeshPhysicalMaterial({ color: '#f2b8c6', roughness: 0.4, sheen: 1, sheenColor: new THREE.Color('#fff4f8'), side: THREE.DoubleSide, transmission: 0.15, thickness: 0.05 }),
+      petal: new THREE.MeshPhysicalMaterial({ color: '#f2b8c6', roughness: 0.4, sheen: 1, sheenColor: new THREE.Color('#fff4f8'), side: THREE.DoubleSide }),
       petal2: new THREE.MeshPhysicalMaterial({ color: '#d6c4f2', roughness: 0.4, sheen: 1, side: THREE.DoubleSide }),
       tulle: new THREE.MeshPhysicalMaterial({ color: '#fbe9f2', roughness: 0.3, transparent: true, opacity: 0.55, side: THREE.DoubleSide, sheen: 1 }),
       gold: new THREE.MeshStandardMaterial({ color: '#e2c07a', metalness: 1, roughness: 0.25 }),
@@ -335,13 +336,15 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
     </mesh>
   );
 
+  const lowQuality = useMagic.getState().quality === 'low';
   return (
     <group ref={root}>
       {/* soft aura so she reads as a creature of light at a distance */}
       <sprite position={[0, 0.6, 0]} scale={[1.6, 1.6, 1]}>
         <spriteMaterial map={glowTexture()} color="#ffe7c2" transparent opacity={0.55} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
       </sprite>
-      <pointLight position={[0, 0.6, 0.2]} color="#ffdcae" intensity={2.5} distance={4} decay={2} />
+      {/* her own little light — skipped on phones, where every extra light is paid for by every pixel */}
+      {!lowQuality && <pointLight position={[0, 0.6, 0.2]} color="#ffdcae" intensity={2.5} distance={4} decay={2} />}
       <group ref={body}>
         {/* torso */}
         <mesh geometry={geos.bodice} material={mats.dress} castShadow />

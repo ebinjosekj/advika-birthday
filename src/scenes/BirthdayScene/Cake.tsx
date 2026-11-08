@@ -210,7 +210,7 @@ function Balloons({ count = 14 }) {
     g.computeVertexNormals();
     return g;
   }, []);
-  const mat = useMemo(() => new THREE.MeshPhysicalMaterial({ roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08, sheen: 0.4, transmission: 0.0 }), []);
+  const mat = useMemo(() => new THREE.MeshPhysicalMaterial({ roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08, sheen: 0.4 }), []);
   const data = useMemo(() => {
     const r = mulberry32(5);
     return Array.from({ length: count }, (_, i) => ({ a: (i / count) * Math.PI * 2, rad: 2.2 + r() * 2.5, sp: 1.4 + r() * 1.2, d: r() * 1.6, c: PASTELS[i % PASTELS.length], sw: r() * 6 }));

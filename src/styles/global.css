@@ -702,7 +702,46 @@ body {
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: linear-gradient(180deg, #050816 0%, #0d1330 45%, #1c1f45 80%, #2a2850 100%);
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(120% 70% at 76% 18%, rgba(120, 132, 200, 0.28), transparent 60%),
+    linear-gradient(180deg, #070a1c 0%, #10163a 48%, #262a55 78%, #3a3360 100%);
+  transition: opacity 1.2s ease;
+}
+.boot.boot-out {
+  opacity: 0;
+}
+.boot-sky {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.boot-clouds span {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(150, 150, 205, 0.55), rgba(70, 70, 130, 0) 70%);
+  filter: blur(14px);
+}
+.boot-clouds span:nth-child(1) {
+  bottom: -14%;
+  height: 46%;
+}
+.boot-clouds span:nth-child(2) {
+  bottom: 4%;
+  height: 26%;
+  left: -40%;
+  right: 30%;
+  opacity: 0.7;
+}
+.boot-clouds span:nth-child(3) {
+  bottom: 10%;
+  height: 20%;
+  left: 35%;
+  right: -35%;
+  opacity: 0.55;
 }
 
 /* static fallback world (no WebGL) */

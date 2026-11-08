@@ -1,11 +1,11 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { AdaptiveDpr, PerformanceMonitor, Sparkles } from '@react-three/drei';
+import { PerformanceMonitor, Sparkles } from '@react-three/drei';
 import { Bloom, BrightnessContrast, DepthOfField, EffectComposer, HueSaturation, N8AO, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { useMagic, world } from '../app/store';
-import { QUALITY_PROFILES, downgrade, type QualityProfile } from '../utils/quality';
+import { QUALITY_PROFILES, type QualityProfile } from '../utils/quality';
 import { ISLANDS, LANDMARKS, STATIONS } from '../config/worldLayout';
 import { SkyDome } from './shared/Sky';
 import { Cloudscape } from './shared/Clouds';
@@ -128,8 +128,8 @@ function Kingdom({ q }: { q: QualityProfile }) {
       <ShootingStars count={q.level === 'low' ? 2 : 4} />
       <DistantMountains />
       <Cloudscape total={q.clouds} />
-      <DistantIslands />
-      <GodRays />
+      {q.level !== 'low' && <DistantIslands />}
+      {q.level !== 'low' && <GodRays />}
 
       {/* ENV 1 — waterfall island */}
       <Island {...ISLANDS.waterfall} position={ISLANDS.waterfall.pos} receiveShadow />
@@ -353,6 +353,14 @@ function Warmup({ onReady }: { onReady?: () => void }) {
   useEffect(() => {
     let cancelled = false;
     const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+    let fired = false;
+    const fire = () => {
+      if (cancelled || fired) return;
+      fired = true;
+      ready.current?.();
+    };
+    // never hold the opening back for a slow shader compiler
+    const guard = setTimeout(fire, 5000);
     (async () => {
       await frame();
       try {
@@ -369,13 +377,33 @@ function Warmup({ onReady }: { onReady?: () => void }) {
         /* fall back to lazy compile */
       }
       for (let i = 0; i < 3; i++) await frame();
-      if (!cancelled) ready.current?.();
+      fire();
     })();
     return () => {
       cancelled = true;
+      clearTimeout(guard);
     };
   }, [gl, scene, camera]);
   return null;
+}
+
+/**
+ * On a slow device only lower the render resolution, a step at a time. We never
+ * swap quality profiles at runtime: that rebuilt the whole world mid-flight and froze it.
+ */
+function DprGovernor() {
+  const gl = useThree((st) => st.gl);
+  const setDpr = useThree((st) => st.setDpr);
+  return (
+    <PerformanceMonitor
+      flipflops={3}
+      onDecline={() => {
+        const cur = gl.getPixelRatio();
+        const next = Math.max(Math.min(0.6, cur), cur - 0.25);
+        if (next < cur) setDpr(next);
+      }}
+    />
+  );
 }
 
 function FpsProbe() {
@@ -393,7 +421,6 @@ function FpsProbe() {
 
 export default function World({ onReady }: { onReady?: () => void }) {
   const quality = useMagic((s) => s.quality);
-  const setQuality = useMagic((s) => s.setQuality);
   const maxDpr = useMagic((s) => s.maxDpr);
   const q = QUALITY_PROFILES[quality];
   const dpr: [number, number] = [Math.min(q.dpr[0], maxDpr), Math.min(q.dpr[1], maxDpr)];
@@ -416,8 +443,7 @@ export default function World({ onReady }: { onReady?: () => void }) {
         if (window.__MAGIC__) window.__MAGIC__.renderInfo = () => ({ geometries: gl.info.memory.geometries, textures: gl.info.memory.textures, programs: gl.info.programs?.length ?? 0, calls: gl.info.render.calls });
       }}
     >
-      <PerformanceMonitor onDecline={() => setQuality(downgrade(useMagic.getState().quality))} flipflops={2} />
-      <AdaptiveDpr />
+      <DprGovernor />
       <Suspense fallback={null}>
         <Lighting q={q} />
         <Kingdom q={q} />
