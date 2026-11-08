@@ -92,8 +92,9 @@ export function CloudLayer({ count, seed, center, spread, size, speed, opacity =
           float a = tx.a;
           float density = 1.0 - tx.r;            // darker texels = thicker cloud
           // sunlit tops, cool shadowed bellies, warm rim scattering toward the low sun
-          vec3 lit = mix(vec3(1.0,0.96,0.9), vec3(0.62,0.66,0.82), uMood);
-          vec3 shade = mix(vec3(0.66,0.66,0.74), vec3(0.14,0.16,0.28), uMood);
+          float eve = clamp(1.0 - abs(uMood - 0.7) * 3.2, 0.0, 1.0);
+          vec3 lit = mix(mix(vec3(1.0,0.96,0.9), vec3(0.62,0.66,0.82), uMood), vec3(1.0,0.7,0.56), eve);
+          vec3 shade = mix(mix(vec3(0.66,0.66,0.74), vec3(0.14,0.16,0.28), uMood), vec3(0.36,0.31,0.48), eve);
           float light = smoothstep(0.1, 0.9, vH) * (0.8 + vShade * 0.2) - density * 0.9;
           vec3 col = mix(shade, lit, clamp(light + 0.35, 0.0, 1.0));
           col += vec3(1.0,0.7,0.45) * pow(a, 3.0) * pow(1.0 - vH, 2.0) * 0.18 * (1.0 - uMood);

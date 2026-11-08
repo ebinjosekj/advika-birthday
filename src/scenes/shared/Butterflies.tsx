@@ -24,6 +24,11 @@ export interface SwarmProps {
 const tmpObj = new THREE.Object3D();
 const wingObj = new THREE.Object3D();
 const up = new THREE.Vector3(0, 1, 0);
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+const scratchTo = new THREE.Vector3();
+const scratchH = new THREE.Vector3();
+const scratchM = new THREE.Matrix4();
+const ANGLES = [0, 0, 0, 0];
 
 function wingGeometry(side: 1 | -1, lower: boolean) {
   const g = new THREE.PlaneGeometry(1, 1, 4, 1);
@@ -109,7 +114,7 @@ export function ButterflySwarm({ count, center, radius, height = 4, perches = []
         flap = 0.3 + Math.sin(time * 2 + b.phase) * 0.35; // slow fanning while perched
         if (b.rest <= 0) pickTarget(b);
       } else {
-        const to = b.target.clone().sub(b.p);
+        const to = scratchTo.copy(b.target).sub(b.p);
         const d = to.length();
         if (b.target.lengthSq() === 0 || d < 0.25) {
           const atPerch = perches.some((pp) => Math.abs(pp[0] - b.target.x) + Math.abs(pp[2] - b.target.z) < 0.01);
@@ -126,7 +131,7 @@ export function ButterflySwarm({ count, center, radius, height = 4, perches = []
         flap = burst ? Math.sin(time * b.freq + b.phase) * 0.95 + 0.25 : 0.15 + Math.sin(time * 2 + b.phase) * 0.1;
       }
       tmpObj.position.copy(b.p);
-      const hv = new THREE.Vector3(b.v.x, 0, b.v.z);
+      const hv = scratchH.set(b.v.x, 0, b.v.z);
       if (hv.lengthSq() > 1e-4) tmpObj.rotation.set(0, Math.atan2(hv.x, hv.z), 0);
       b.pitch += ((-b.v.y * 0.15) - b.pitch) * 0.1;
       tmpObj.rotateX(b.pitch);
@@ -135,10 +140,13 @@ export function ButterflySwarm({ count, center, radius, height = 4, perches = []
       tmpObj.scale.setScalar(sc);
       tmpObj.updateMatrix();
       body.current!.setMatrixAt(i, tmpObj.matrix);
-      [flap, -flap, flap * 0.85 - 0.1, -(flap * 0.85 - 0.1)].forEach((ang, k) => {
-        wingObj.matrix.makeRotationAxis(new THREE.Vector3(0, 0, 1), ang);
-        const m = tmpObj.matrix.clone().multiply(wingObj.matrix);
-        meshes[k]!.setMatrixAt(i, m);
+      ANGLES[0] = flap;
+      ANGLES[1] = -flap;
+      ANGLES[2] = flap * 0.85 - 0.1;
+      ANGLES[3] = -ANGLES[2];
+      ANGLES.forEach((ang, k) => {
+        wingObj.matrix.makeRotationAxis(Z_AXIS, ang);
+        meshes[k]!.setMatrixAt(i, scratchM.multiplyMatrices(tmpObj.matrix, wingObj.matrix));
       });
       visible = visible && true;
     });

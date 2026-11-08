@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useMagic } from './store';
 import { TransitionManager } from '../animations/sectionTransitions/TransitionManager';
 import { IntroDirector } from '../animations/cameraTimelines/IntroDirector';
-import { Loader } from '../components/Intro/Loader';
 import { IntroOverlay } from '../components/Intro/IntroOverlay';
 import { Nav } from '../components/Navigation/Nav';
 import { QuickDetails, BackToTop } from '../components/Navigation/QuickDetails';
@@ -73,7 +72,12 @@ export default function App() {
       <a className="skip-link" href="#rsvp" onClick={() => IntroDirector.skip()}>
         Skip to RSVP
       </a>
-      {!ready && <Loader fonts={fontsReady} world={worldReady || worldFailed} />}
+      {!ready && (
+        // a still evening sky while the world compiles — no loading animation
+        <div className="boot" role="status" data-testid="boot">
+          <span className="sr-only">Opening the invitation</span>
+        </div>
+      )}
       {ready && !main && <IntroOverlay />}
       {main && <Nav />}
       <MagicToast />

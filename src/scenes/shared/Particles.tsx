@@ -40,6 +40,7 @@ class Pool {
 
 export const particles = new Pool();
 const tmpColor = new THREE.Color();
+const sparkColor = new THREE.Color();
 
 export function ParticleField({ max }: { max: number }) {
   const { geo, mat } = useMemo(() => {
@@ -76,7 +77,7 @@ export function ParticleField({ max }: { max: number }) {
         const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2;
         const s = Math.sqrt(1 - u * u);
         const sp = b.speed * (0.3 + Math.random() * 0.7);
-        const c = tmpColor.clone().offsetHSL((Math.random() - 0.5) * 0.15, 0, (Math.random() - 0.3) * 0.2);
+        const c = sparkColor.copy(tmpColor).offsetHSL((Math.random() - 0.5) * 0.15, 0, (Math.random() - 0.3) * 0.2);
         particles.spawn(b.pos[0], b.pos[1], b.pos[2], s * Math.cos(th) * sp, u * sp + b.speed * 0.25, s * Math.sin(th) * sp, c, 1.2 + Math.random() * 1.6, 0.05 + Math.random() * 0.08);
       }
     }

@@ -57,21 +57,13 @@ npm run test:e2e               # Playwright end-to-end (starts the dev server au
 
 ## RSVP storage (Supabase)
 
-Without credentials the site runs in **local demo mode**: RSVPs are saved in the visitor’s own
-browser (`localStorage`) and are clearly labelled as demo. The hosts do **not** receive them.
+The published site sends RSVPs to the Supabase project `crvltarnpjgqvnlovfau`, into its own table
+**`advika_rsvps`** (separate from any other event's tables in that project). The browser only has the
+public *publishable* key (in `.env.production`); Row Level Security lets guests **insert** an RSVP but never read anyone's.
 
-To store them for real:
-
-1. Create a Supabase project.
-2. Run `supabase/migrations/001_rsvps.sql` in the SQL editor. It creates the `rsvps`
-   table with CHECK constraints, an idempotency key against double submits, and Row Level Security:
-   guests can **insert** RSVPs but never read them.
-3. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-   (the public anon/publishable key — **never** the service-role key).
-4. Restart `npm run dev`. The demo badges disappear and submissions go to Supabase.
-5. Read RSVPs in the Supabase dashboard (Table editor → `rsvps`).
-
-Optional hardening for a public launch: put inserts behind an Edge Function with rate limiting / CAPTCHA.
+- **One-time setup:** run `supabase/migrations/001_rsvps.sql` in the Supabase SQL editor.
+- **See replies:** Supabase dashboard → Table editor → `advika_rsvps`.
+- `npm run dev` (local) stays in **demo mode** (replies saved in the browser only) unless you add a `.env.local`.
 
 ## Assets & credits
 

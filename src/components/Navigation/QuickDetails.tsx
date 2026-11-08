@@ -28,7 +28,7 @@ export function QuickDetails() {
           </div>
         </div>
       )}
-      <button type="button" className="btn btn-ghost" style={{ background: 'rgba(251,245,234,.82)', backdropFilter: 'blur(10px)' }} aria-expanded={open} aria-controls="quick-details" onClick={() => setOpen((o) => !o)} data-testid="quick-details">
+      <button type="button" className="btn btn-ghost" style={{ background: 'rgba(251,245,234,.94)' }} aria-expanded={open} aria-controls="quick-details" onClick={() => setOpen((o) => !o)} data-testid="quick-details">
         <CalendarHeart size={18} aria-hidden="true" /> {eventConfig.shortDateLabel}, {eventConfig.timeLabel}
       </button>
     </div>
@@ -41,7 +41,7 @@ export function BackToTop() {
   useEffect(() => setShow(section !== 'home'), [section]);
   if (!show) return null;
   return (
-    <button type="button" className="icon-btn ui" aria-label="Back to top" onClick={() => go('top')} data-testid="back-to-top" style={{ position: 'fixed', zIndex: 30, right: 'max(12px, env(safe-area-inset-right))', bottom: 'max(12px, env(safe-area-inset-bottom))', background: 'rgba(251,245,234,.85)', backdropFilter: 'blur(10px)' }}>
+    <button type="button" className="icon-btn ui" aria-label="Back to top" onClick={() => go('top')} data-testid="back-to-top" style={{ position: 'fixed', zIndex: 30, right: 'max(12px, env(safe-area-inset-right))', bottom: 'max(12px, env(safe-area-inset-bottom))', background: 'rgba(251,245,234,.94)' }}>
       <ArrowUp size={20} aria-hidden="true" />
     </button>
   );

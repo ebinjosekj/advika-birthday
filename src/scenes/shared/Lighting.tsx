@@ -7,9 +7,11 @@ import { world } from '../../app/store';
 import type { QualityProfile } from '../../utils/quality';
 
 const dayFog = new THREE.Color('#cfd6df');
-const nightFog = new THREE.Color('#283048');
+const nightFog = new THREE.Color('#2c3150');
+const eveningFog = new THREE.Color('#7b6d8c');
 const daySun = new THREE.Color('#ffd2a1');
 const nightSun = new THREE.Color('#9fb2e6');
+const eveningSun = new THREE.Color('#ff9a5a');
 
 /** Sun ↔ moon key light, hemisphere fill, and fog — all keyed to world.mood. */
 export function Lighting({ q }: { q: QualityProfile }) {
@@ -20,12 +22,13 @@ export function Lighting({ q }: { q: QualityProfile }) {
   useFrame(() => {
     const m = world.mood;
     if (scene.fog instanceof THREE.FogExp2) {
-      scene.fog.color.copy(dayFog).lerp(nightFog, m);
+      scene.fog.color.copy(dayFog).lerp(nightFog, m).lerp(eveningFog, Math.max(0, 1 - Math.abs(m - 0.7) * 3.2) * 0.8);
       scene.fog.density = 0.0011 + m * 0.0008;
     }
     if (sun.current) {
-      sun.current.color.copy(daySun).lerp(nightSun, m);
-      sun.current.intensity = 3.2 - m * 2.3;
+      const ev = Math.max(0, 1 - Math.abs(m - 0.7) * 3.2);
+      sun.current.color.copy(daySun).lerp(nightSun, m).lerp(eveningSun, ev * 0.85);
+      sun.current.intensity = 3.0 - m * 2.1;
       // shadow frustum follows the camera's focus area
       sun.current.position.set(camera.position.x - 60, camera.position.y + 70, camera.position.z - 40);
       sun.current.target.position.set(camera.position.x, 0, camera.position.z - 30);

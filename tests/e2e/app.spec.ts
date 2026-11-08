@@ -5,7 +5,8 @@ test.describe('A · application', () => {
   test('loads with a WebGL world, every section, and no errors or missing assets', async ({ page }) => {
     const c = collect(page);
     await page.goto('/?quality=low&renderScale=0.4');
-    await expect(page.getByTestId('loading-progress').or(page.getByTestId('intro'))).toBeVisible();
+    await expect(page.getByTestId('boot').or(page.getByTestId('intro'))).toBeAttached();
+    await expect(page.getByText('Gathering fairy dust')).toHaveCount(0);
     await expect(page.getByTestId('open-book')).toBeVisible({ timeout: 90_000 });
     await expect(page.getByTestId('world-canvas')).toBeAttached();
     for (const id of SECTIONS) await expect(page.locator(`#${id}`)).toBeAttached();

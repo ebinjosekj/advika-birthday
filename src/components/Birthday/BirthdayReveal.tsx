@@ -1,11 +1,13 @@
 import { Flame } from 'lucide-react';
 import { Chapter } from '../ui/Chapter';
 import { surprises } from '../Transitions/surprises';
+import { Portrait } from '../ui/Portrait';
 
 export function BirthdayReveal() {
   return (
     <Chapter id="birthday" align="right" labelledBy="birthday-title" tall>
       <div className="panel">
+        <Portrait size={150} className="cameo-panel" />
         <p className="h-sub" style={{ margin: '0 0 6px' }}>
           Something Magical Is Happening!
         </p>

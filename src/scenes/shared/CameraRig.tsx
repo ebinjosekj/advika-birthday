@@ -70,7 +70,7 @@ export function CameraRig() {
       const c = Math.min(1, Math.max(0, world.intro.cam));
       curves.introPos.getPoint(c, target);
       curves.introLook.getPoint(c, targetLook);
-      mood = 0.12 * (1 - c) + 0.05;
+      mood = 0.64 + 0.06 * c; // the story opens at sunset
       damp = reducedMotion ? 1000 : 3;
     } else {
       const n = STATIONS.length - 1;
@@ -80,7 +80,7 @@ export function CameraRig() {
       curves.mainLook.getPoint(u, targetLook);
       if (portrait) {
         // step back a little so the subject fits a narrow screen
-        target.add(target.clone().sub(targetLook).normalize().multiplyScalar(3));
+        target.add(tmpDir.copy(target).sub(targetLook).normalize().multiplyScalar(3));
       }
       // Re-aim so the subject lands where the text panel isn't: beside it on
       // desktop, above the bottom sheet on phones.

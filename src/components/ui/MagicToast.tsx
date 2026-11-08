@@ -10,10 +10,10 @@ export function MagicToast() {
     return () => clearTimeout(t);
   }, [toast]);
   return (
-    <div aria-live="polite" aria-atomic="true">
+    <div aria-live="polite" aria-atomic="true" className="toast-wrap">
       <AnimatePresence>
         {toast && (
-          <motion.div key={toast.id} className="toast" data-testid="toast" initial={{ opacity: 0, y: -12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.4 }}>
+          <motion.div key={toast.id} className="toast" data-testid="toast" initial={{ opacity: 0, y: -12, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}>
             <strong>{toast.title}</strong>
             {toast.body && <span>{toast.body}</span>}
           </motion.div>

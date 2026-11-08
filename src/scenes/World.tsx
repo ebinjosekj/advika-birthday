@@ -189,10 +189,18 @@ function StoryFairy() {
     const ahead = new THREE.Vector3();
     const look = new THREE.Vector3();
     const station = new THREE.Vector3();
+    const wob = new THREE.Vector3();
+    const FORWARD = new THREE.Vector3(0, 0, 1);
+    let lastPhase = '';
     const d: FairyDriver = {
       scale: 1.1,
       target: (t, out) => {
         const s = useMagic.getState();
+        if ((s.phase === 'main') !== (lastPhase === 'main')) {
+          lastPhase = s.phase;
+          return false; // hide for a frame so she re-appears at her new spot
+        }
+        lastPhase = s.phase;
         if (s.phase !== 'main') {
           const f = world.intro.fairy;
           if (f <= 0) return false;
@@ -200,15 +208,15 @@ function StoryFairy() {
           curves.introPos.getPoint(c, ahead);
           curves.introLook.getPoint(c, look);
           // fly a little ahead of and below the lens so she leads the camera
-          ahead.lerp(look, 0.12).add(new THREE.Vector3(Math.sin(t * 0.9) * 1.2, -0.6 + Math.sin(t * 1.3) * 0.5, 0));
+          ahead.lerp(look, 0.32).add(wob.set(Math.sin(t * 0.9) * 1.2, -0.6 + Math.sin(t * 1.3) * 0.5, 0));
           const e = Math.min(1, f / 0.08);
-          out.copy(book).add(new THREE.Vector3(0, 0, 1)).lerp(ahead, e * e * (3 - 2 * e));
+          out.copy(book).add(FORWARD).lerp(ahead, e * e * (3 - 2 * e));
           d.scale = 1.1;
           return true;
         }
         const n = STATIONS.length - 1;
         curves.fairy.getPoint(Math.min(1, Math.max(0, world.t / n)), station);
-        out.copy(station).add(new THREE.Vector3(Math.sin(t * 0.7) * 1.4, Math.sin(t * 1.1) * 0.5, Math.cos(t * 0.5) * 0.9));
+        out.copy(station).add(wob.set(Math.sin(t * 0.7) * 1.4, Math.sin(t * 1.1) * 0.5, Math.cos(t * 0.5) * 0.9));
         d.scale = s.activeSection === 'finale' ? 2.6 : s.activeSection === 'countdown' ? 1.8 : 1.0;
         return true;
       },
@@ -230,6 +238,7 @@ function GuideButterfly() {
   const fwd = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
   const upv = useMemo(() => new THREE.Vector3(), []);
+  const guideTarget = useMemo(() => new THREE.Vector3(), []);
   const placed = useRef(false);
   useFrame((st, dt) => {
     const t = st.clock.elapsedTime;
@@ -245,7 +254,7 @@ function GuideButterfly() {
     const halfW = halfH * (st.size.width / st.size.height);
     const nx = (portrait ? 0.7 : 0.84) + Math.sin(t * 0.6) * 0.03;
     const ny = (portrait ? 0.56 : 0.6) + Math.sin(t * 1.4) * 0.03;
-    const target = cam.position.clone().addScaledVector(fwd, d).addScaledVector(right, nx * halfW).addScaledVector(upv, ny * halfH);
+    const target = guideTarget.copy(cam.position).addScaledVector(fwd, d).addScaledVector(right, nx * halfW).addScaledVector(upv, ny * halfH);
     // camera-locked: follow tightly (time-based), with a little organic lag
     if (!placed.current) {
       g.current.position.copy(target);

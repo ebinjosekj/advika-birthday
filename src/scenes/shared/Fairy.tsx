@@ -155,6 +155,16 @@ export interface FairyDriver {
 
 const tmpV = new THREE.Vector3();
 const trailColor = new THREE.Color();
+const sPrev = new THREE.Vector3();
+const sVel = new THREE.Vector3();
+const sToCam = new THREE.Vector3();
+const sLocalVel = new THREE.Vector3();
+const sInvQ = new THREE.Quaternion();
+const sRest = new THREE.Vector3();
+const sForce = new THREE.Vector3();
+const sDelta = new THREE.Vector3();
+const sWand = new THREE.Vector3();
+const HAIR_ANCHOR = new THREE.Vector3(0, 0.86, -0.12);
 
 export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRate?: number }) {
   const root = useRef<THREE.Group>(null);
@@ -248,15 +258,15 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
       initialised.current = true;
     }
     // critically-damped follow
-    const prev = r.position.clone();
+    const prev = sPrev.copy(r.position);
     const k = 1 - Math.exp(-dt * 3.2);
     r.position.lerp(tmpV, k);
-    const v = r.position.clone().sub(prev).divideScalar(Math.max(dt, 1e-4));
+    const v = sVel.copy(r.position).sub(prev).divideScalar(Math.max(dt, 1e-4));
     vel.current.lerp(v, 1 - Math.exp(-dt * 6));
     const speed = vel.current.length();
     const flying = Math.min(1, speed / 6);
     // face direction of travel when moving, the camera when hovering
-    const toCam = st.camera.position.clone().sub(r.position);
+    const toCam = sToCam.copy(st.camera.position).sub(r.position);
     const dir = flying > 0.2 ? vel.current : toCam;
     const yaw = Math.atan2(dir.x, dir.z);
     let dy = yaw - r.rotation.y;
@@ -294,15 +304,15 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
       head.current.rotation.y = Math.sin(t * 0.5) * 0.25 * (1 - flying);
     }
     // spring-chain ponytail in local space; velocity pushes it back
-    const localVel = vel.current.clone().applyQuaternion(r.quaternion.clone().invert()).divideScalar(scale);
-    const anchor = new THREE.Vector3(0, 0.86, -0.12);
+    const localVel = sLocalVel.copy(vel.current).applyQuaternion(sInvQ.copy(r.quaternion).invert()).divideScalar(scale);
+    const anchor = HAIR_ANCHOR;
     hairState.current.forEach((h, i) => {
       const parent = i === 0 ? anchor : hairState.current[i - 1].p;
-      const rest = parent.clone().add(new THREE.Vector3(Math.sin(t * 2 + i) * 0.006, -0.035 - i * 0.002, -0.03)).addScaledVector(localVel, -0.012 * (i + 1));
-      const f = rest.sub(h.p).multiplyScalar(90);
+      const rest = sRest.copy(parent).add(sDelta.set(Math.sin(t * 2 + i) * 0.006, -0.035 - i * 0.002, -0.03)).addScaledVector(localVel, -0.012 * (i + 1));
+      const f = sForce.copy(rest).sub(h.p).multiplyScalar(90);
       h.v.addScaledVector(f, dt).multiplyScalar(Math.exp(-dt * 9));
       h.p.addScaledVector(h.v, dt);
-      const d = h.p.clone().sub(parent);
+      const d = sDelta.copy(h.p).sub(parent);
       const L = 0.05;
       if (d.length() > L) h.p.copy(parent).addScaledVector(d.normalize(), L);
       const m = hair.current[i];
@@ -312,7 +322,7 @@ export function Fairy({ driver, trailRate = 40 }: { driver: FairyDriver; trailRa
     trailAcc.current += dt * trailRate * (0.3 + flying);
     while (trailAcc.current > 1) {
       trailAcc.current -= 1;
-      const wand = new THREE.Vector3(-0.2, 0.55, 0.12).multiplyScalar(scale).applyQuaternion(r.quaternion).add(r.position);
+      const wand = sWand.set(-0.2, 0.55, 0.12).multiplyScalar(scale).applyQuaternion(r.quaternion).add(r.position);
       trailColor.set(Math.random() > 0.5 ? '#ffe3a3' : '#f6c6e6');
       particles.spawn(wand.x, wand.y, wand.z, (Math.random() - 0.5) * 0.4, -0.2 - Math.random() * 0.3, (Math.random() - 0.5) * 0.4, trailColor, 1.4 + Math.random(), 0.035 + Math.random() * 0.04);
     }

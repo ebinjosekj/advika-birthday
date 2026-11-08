@@ -2,6 +2,8 @@ import { backendMode, demoShouldFail, getSupabase, newClientId, wait } from './b
 import { cleanText, type RsvpInput } from '../utils/validation';
 import type { RsvpRecord, SubmitResult } from '../types';
 
+/** Advika's own table, kept separate from any other event in the same Supabase project. */
+export const RSVP_TABLE = 'advika_rsvps';
 const DEMO_KEY = 'advika.demo.rsvps.v1';
 const DEVICE_KEY = 'advika.rsvp.submitted.v1';
 
@@ -43,7 +45,7 @@ export function submitRsvp(record: RsvpRecord): Promise<SubmitResult> {
     try {
       if (backendMode === 'supabase') {
         const sb = await getSupabase();
-        const { error } = await sb.from('rsvps').insert({
+        const { error } = await sb.from(RSVP_TABLE).insert({
           client_id: record.clientId,
           name: record.name,
           attending: record.attending,

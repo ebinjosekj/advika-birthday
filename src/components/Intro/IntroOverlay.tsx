@@ -4,6 +4,7 @@ import { useMagic } from '../../app/store';
 import { IntroDirector } from '../../animations/cameraTimelines/IntroDirector';
 import { eventConfig } from '../../config/eventConfig';
 import { SoundToggle } from '../Audio/SoundControl';
+import { Portrait } from '../ui/Portrait';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -53,6 +54,9 @@ export function IntroOverlay() {
             style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center', padding: 20, background: 'radial-gradient(ellipse at 50% 55%, rgba(255,226,170,.35), rgba(50,25,70,.45) 75%)' }}
           >
             <div>
+              <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, ease }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+                <Portrait size={140} />
+              </motion.div>
               {['YOU ARE INVITED!', 'ADVIKA IS TURNING 7!', 'LET’S CELEBRATE HER MAGICAL BIRTHDAY!'].map((line, i) => (
                 <motion.p
                   key={line}
