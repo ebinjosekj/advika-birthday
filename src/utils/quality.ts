@@ -17,8 +17,8 @@ export interface QualityProfile {
 }
 
 export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
-  high: { level: 'high', dpr: [1, 2], shadows: true, shadowMapSize: 2048, post: 'full', grass: 9000, flowers: 900, trees: 46, clouds: 150, particles: 2400, butterflies: 26, fireflies: 260, antialias: false },
-  medium: { level: 'medium', dpr: [1, 1.5], shadows: true, shadowMapSize: 1024, post: 'lite', grass: 4500, flowers: 500, trees: 32, clouds: 100, particles: 1400, butterflies: 18, fireflies: 160, antialias: false },
+  high: { level: 'high', dpr: [1, 1.5], shadows: true, shadowMapSize: 1024, post: 'full', grass: 7000, flowers: 800, trees: 42, clouds: 130, particles: 2000, butterflies: 26, fireflies: 260, antialias: false },
+  medium: { level: 'medium', dpr: [1, 1.25], shadows: false, shadowMapSize: 512, post: 'lite', grass: 4500, flowers: 500, trees: 32, clouds: 100, particles: 1400, butterflies: 18, fireflies: 160, antialias: false },
   low: { level: 'low', dpr: [0.75, 1], shadows: false, shadowMapSize: 512, post: 'none', grass: 1100, flowers: 200, trees: 18, clouds: 36, particles: 500, butterflies: 8, fireflies: 60, antialias: true },
 };
 

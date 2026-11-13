@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor, Sparkles } from '@react-three/drei';
-import { Bloom, BrightnessContrast, DepthOfField, EffectComposer, HueSaturation, N8AO, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing';
 import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { useMagic, world } from '../app/store';
@@ -315,14 +315,13 @@ function Effects({ q }: { q: QualityProfile }) {
       </EffectComposer>
     );
   return (
-    <EffectComposer multisampling={4} enableNormalPass={false}>
-      <N8AO aoRadius={2.5} distanceFalloff={1} intensity={2.2} quality="medium" />
+    <EffectComposer multisampling={0} enableNormalPass={false}>
       <Bloom mipmapBlur intensity={0.6} luminanceThreshold={0.85} luminanceSmoothing={0.2} radius={0.7} />
-      <DepthOfField worldFocusDistance={45} worldFocusRange={160} bokehScale={1.5} />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       <HueSaturation saturation={-0.06} />
       <BrightnessContrast contrast={0.07} />
       <Vignette eskil={false} offset={0.3} darkness={0.5} />
+      <SMAA />
     </EffectComposer>
   );
 }
@@ -459,9 +458,9 @@ export default function World({ onReady }: { onReady?: () => void }) {
       className="world-canvas"
       // R3F defaults to touch-action:none, which would stop phones scrolling the page over the 3D world
       style={{ touchAction: 'pan-y' }}
-      shadows={q.shadows ? 'soft' : false}
+      shadows={q.shadows ? 'percentage' : false}
       dpr={dpr}
-      gl={{ antialias: q.antialias, powerPreference: 'high-performance', alpha: false, stencil: false }}
+      gl={{ antialias: q.antialias, powerPreference: 'high-performance', alpha: false, stencil: false, depth: true }}
       camera={{ fov: 48, near: 0.1, far: 2000, position: [0, 74, 210] }}
       onCreated={({ gl, scene }) => {
         if (new URLSearchParams(location.search).has('debugScene')) (window as unknown as { __scene?: THREE.Scene }).__scene = scene;

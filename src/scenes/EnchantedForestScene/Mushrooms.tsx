@@ -1,11 +1,13 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mulberry32 } from '../../utils/random';
+import { useMagic } from '../../app/store';
 
 /** Glowing mushrooms; pulse brighter after being tapped. */
 export function GlowMushrooms({ position, count = 9, pulseAt }: { position: [number, number, number]; count?: number; pulseAt: () => number }) {
   const caps = useRef<THREE.MeshStandardMaterial[]>([]);
+  const [lightOn] = useState(() => useMagic.getState().quality !== 'low');
   const items = useMemo(() => {
     const r = mulberry32(31);
     return Array.from({ length: count }, (_, i) => ({ x: (r() - 0.5) * 3.2, z: (r() - 0.5) * 3.2, s: i === 0 ? 1.6 : 0.5 + r() * 0.8, c: ['#9fe3ff', '#f6b8e6', '#c7b6ff', '#b8f0d8'][i % 4], tilt: (r() - 0.5) * 0.4 }));
@@ -35,7 +37,8 @@ export function GlowMushrooms({ position, count = 9, pulseAt }: { position: [num
           ))}
         </group>
       ))}
-      <pointLight position={[0, 1.2, 0]} color="#bfe8ff" intensity={6} distance={8} decay={1.6} />
+      {/* fixed for the session (never toggled), so it cannot trigger a shader recompile */}
+      {lightOn && <pointLight position={[0, 1.2, 0]} color="#bfe8ff" intensity={6} distance={8} decay={1.6} />}
     </group>
   );
 }

@@ -17,8 +17,14 @@ const eveningSun = new THREE.Color('#ff9a5a');
 export function Lighting({ q }: { q: QualityProfile }) {
   const sun = useRef<THREE.DirectionalLight>(null);
   const hemi = useRef<THREE.HemisphereLight>(null);
-  const { scene, camera } = useThree();
+  const { scene, camera, gl } = useThree();
+  const frame = useRef(0);
   useFrame(() => {
+    // the shadow map is a second full render of the world; refresh it every other frame
+    if (q.shadows) {
+      gl.shadowMap.autoUpdate = false;
+      if ((frame.current++ & 1) === 0) gl.shadowMap.needsUpdate = true;
+    }
     const m = world.mood;
     if (scene.fog instanceof THREE.FogExp2) {
       scene.fog.color.copy(dayFog).lerp(nightFog, m).lerp(eveningFog, Math.max(0, 1 - Math.abs(m - 0.7) * 5.0) * 0.8);

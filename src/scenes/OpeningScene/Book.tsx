@@ -261,6 +261,7 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
   const runeMat = useMemo(() => new THREE.MeshBasicMaterial({ map: runeTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffd89a', toneMapped: false, side: THREE.DoubleSide }), []);
   const beamMat = useMemo(() => beamMaterial(), []);
   const orbit = useMemo(() => orbitSparkles(48), []);
+  const lastPages = useRef(-1);
 
   useFrame((st) => {
     const { book, pages: pg, light: lt } = world.intro;
@@ -271,8 +272,12 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
       const ease = lift * lift * (3 - 2 * lift);
       root.current.position.y = position[1] + Math.sin(t * 0.9) * 0.18 * (1 - book * 0.7) + ease * 0.6;
       root.current.rotation.set(-0.12 + Math.sin(t * 0.6) * 0.03 + ease * 0.16, Math.sin(t * 0.4) * 0.12 * (1 - book), Math.sin(t * 0.7) * 0.03);
+      // Only meshes are hidden here. The point light lives outside this group: toggling
+      // a light's visibility changes the scene's light count, which forces three.js to
+      // recompile every lit shader at once — that was the mid-journey freeze.
       root.current.visible = world.intro.cam < 0.55;
     }
+    const hidden = world.intro.cam >= 0.55;
     if (runeRing.current) {
       runeRing.current.rotation.z = t * 0.12;
       const s = 1 + lt * 0.35 + Math.sin(t * 1.4) * 0.015;
@@ -284,8 +289,11 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
     orbit.material.uniforms.uT.value = t;
     orbit.material.uniforms.uOpen.value = pg;
     if (cover.current) cover.current.rotation.y = -book * Math.PI * 0.96;
+    // pages only need re-bending while they are actually turning
+    const pagesMoving = !hidden && Math.abs(pg - lastPages.current) > 1e-4;
+    lastPages.current = pg;
     pages.current.forEach((p, i) => {
-      if (!p) return;
+      if (!p || !pagesMoving) return;
       const local = Math.min(1, Math.max(0, pg * 1.6 - i * 0.12));
       const e = local * local * (3 - 2 * local);
       p.rotation.y = -e * Math.PI * (0.92 - i * 0.035);
@@ -307,10 +315,16 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
       glow.current.scale.set(s, s, 1);
       (glow.current.material as THREE.SpriteMaterial).opacity = Math.min(1, lt * 1.2);
     }
-    if (light.current) light.current.intensity = lt * 40;
+    if (light.current) {
+      light.current.intensity = hidden ? 0 : lt * 40;
+      if (root.current) light.current.position.set(root.current.position.x, root.current.position.y, root.current.position.z + 3);
+    }
   });
 
   return (
+    <>
+    {/* the book's glow light stays mounted and visible for the whole session (see useFrame) */}
+    <pointLight ref={light} position={[position[0], position[1], position[2] + 3]} color="#ffd89a" intensity={0} distance={30} decay={1.5} />
     <group ref={root} position={position} scale={1.5}>
       <group position={[-W / 2, 0, 0]}>
         {/* back cover + spine + page block */}
@@ -349,7 +363,6 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
       <sprite ref={glow} position={[0, 0, T / 2 + 0.3]}>
         <spriteMaterial map={glowTexture()} color="#ffe2a6" transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
       </sprite>
-      <pointLight ref={light} position={[0, 0, 2]} color="#ffd89a" distance={30} decay={1.5} />
       {/* rotating ring of glowing runes behind the book */}
       <group ref={runeRing} position={[0, 0, -0.9]}>
         <mesh material={runeMat}>
@@ -362,5 +375,6 @@ export function MagicBook({ position }: { position: [number, number, number] }) 
       </mesh>
       <points geometry={orbit.geometry} material={orbit.material} frustumCulled={false} />
     </group>
+    </>
   );
 }

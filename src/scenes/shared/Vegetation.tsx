@@ -81,8 +81,9 @@ export function Grass({ areas, count }: { areas: Scatter[]; count: number }) {
     mesh.count = n;
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    enableCulling(mesh, 1.5);
   }, [areas, count]);
-  return <instancedMesh ref={ref} args={[geo, mat, count]} frustumCulled={false} receiveShadow />;
+  return <instancedMesh ref={ref} args={[geo, mat, count]} receiveShadow />;
 }
 
 /** Five-petal flower (petals + golden centre) merged into one geometry. */
@@ -156,8 +157,9 @@ export function Flowers({ areas, count, glow = 0, scale = 1 }: { areas: Scatter[
     mesh.count = n;
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    enableCulling(mesh, 1.5);
   }, [areas, count, scale]);
-  return <instancedMesh ref={ref} args={[geo, mat, count]} frustumCulled={false} />;
+  return <instancedMesh ref={ref} args={[geo, mat, count]} />;
 }
 
 /** Canvas-painted cluster of leaves (alpha cut-out), tinted per instance. */
@@ -300,12 +302,26 @@ export function Trees({ areas, count, palette = FOLIAGE.summer }: { areas: Scatt
     t.instanceMatrix.needsUpdate = true;
     c.instanceMatrix.needsUpdate = true;
     if (c.instanceColor) c.instanceColor.needsUpdate = true;
+    enableCulling(t, 2);
+    enableCulling(c, 3);
     void m;
   }, [areas, count, palette]);
   return (
     <group>
-      <instancedMesh ref={trunks} args={[trunkGeo, trunkMat, count]} castShadow receiveShadow frustumCulled={false} />
-      <instancedMesh ref={leaves} args={[cardGeo, leafMat, count * CARDS]} receiveShadow frustumCulled={false} />
+      <instancedMesh ref={trunks} args={[trunkGeo, trunkMat, count]} castShadow receiveShadow />
+      <instancedMesh ref={leaves} args={[cardGeo, leafMat, count * CARDS]} receiveShadow />
     </group>
   );
+}
+
+/**
+ * Each island's grass, flowers and trees are one instanced draw. Give it a bounding
+ * sphere around its real instances (plus room for wind sway) so three.js skips the
+ * whole batch when that island is off screen — or outside the shadow camera.
+ */
+function enableCulling(mesh: THREE.InstancedMesh, pad: number) {
+  mesh.boundingSphere = null;
+  mesh.computeBoundingSphere();
+  if (mesh.boundingSphere) (mesh.boundingSphere as THREE.Sphere).radius += pad;
+  mesh.frustumCulled = true;
 }

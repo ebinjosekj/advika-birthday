@@ -29,9 +29,10 @@ class Pool {
     if (!this.n) return;
     const i = this.head;
     this.head = (this.head + 1) % this.n;
-    this.pos.set([x, y, z], i * 3);
-    this.vel.set([vx, vy, vz], i * 3);
-    this.col.set([c.r, c.g, c.b], i * 3);
+    const j = i * 3;
+    this.pos[j] = x; this.pos[j + 1] = y; this.pos[j + 2] = z;
+    this.vel[j] = vx; this.vel[j + 1] = vy; this.vel[j + 2] = vz;
+    this.col[j] = c.r; this.col[j + 1] = c.g; this.col[j + 2] = c.b;
     this.life[i] = life;
     this.maxLife[i] = life;
     this.size[i] = size;
@@ -83,11 +84,16 @@ export function ParticleField({ max }: { max: number }) {
     }
     const { n, pos, vel, life, maxLife, alive } = particles;
     const drag = Math.exp(-dt * 1.6);
+    let changed = false;
     for (let i = 0; i < n; i++) {
       if (life[i] <= 0) {
-        if (alive[i] !== 0) alive[i] = 0;
+        if (alive[i] !== 0) {
+          alive[i] = 0;
+          changed = true;
+        }
         continue;
       }
+      changed = true;
       life[i] -= dt;
       const j = i * 3;
       vel[j] *= drag;
@@ -99,6 +105,7 @@ export function ParticleField({ max }: { max: number }) {
       const t = life[i] / maxLife[i];
       alive[i] = Math.max(0, Math.min(1, t * 2.2)) * (0.75 + 0.25 * Math.sin(life[i] * 30 + i));
     }
+    if (!changed) return;
     geo.attributes.position.needsUpdate = true;
     geo.attributes.color.needsUpdate = true;
     geo.attributes.aSize.needsUpdate = true;

@@ -37,8 +37,8 @@ export function IntroOverlay() {
                 <motion.span
                   key={i}
                   aria-hidden="true"
-                  initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 + i * 0.035, duration: 0.7, ease }}
                   style={{ display: 'inline-block', whiteSpace: 'pre' }}
                 >
@@ -74,8 +74,8 @@ export function IntroOverlay() {
                 <motion.p
                   key={line}
                   className="reveal-line"
-                  initial={{ opacity: 0, y: 18, filter: 'blur(8px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 + i * 0.7, duration: 1.1, ease }}
                   style={{ margin: '0 0 10px', fontSize: i === 1 ? 'clamp(2.4rem, 7vw, 5.6rem)' : 'clamp(1.2rem, 3vw, 2.2rem)', lineHeight: 1.05 }}
                 >

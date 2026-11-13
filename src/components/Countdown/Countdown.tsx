@@ -17,9 +17,9 @@ function Digits({ value }: { value: string }) {
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.span
               key={d}
-              initial={reduced ? false : { y: '-100%', opacity: 0, filter: 'blur(4px)' }}
-              animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
-              exit={reduced ? undefined : { y: '100%', opacity: 0, filter: 'blur(4px)' }}
+              initial={reduced ? false : { y: '-100%', opacity: 0 }}
+              animate={{ y: '0%', opacity: 1 }}
+              exit={reduced ? undefined : { y: '100%', opacity: 0 }}
               transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
               style={{ display: 'inline-block' }}
             >
