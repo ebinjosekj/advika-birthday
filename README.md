@@ -53,7 +53,7 @@ npm run test:e2e               # Playwright end-to-end (starts the dev server au
   writes `world.t`; `src/scenes/shared/CameraRig.tsx` is the only thing that moves the camera.
 - **Opening film:** `src/animations/cameraTimelines/IntroDirector.ts`
 - **3D scenes:** `src/scenes/**`  ·  **Page chapters:** `src/components/**`
-- **Sound (synthesised, no audio files):** `src/services/audioEngine.ts`
+- **Sound:** `src/services/audioEngine.ts` (synthesised ambience + effects). Background music `public/audio/advika-waltz.mp3` is an original waltz rendered by `scripts/compose-music.py`; it starts when the guest taps "Open the magic book".
 
 ## RSVP storage (Supabase)
 

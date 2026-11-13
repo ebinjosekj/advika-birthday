@@ -3,7 +3,7 @@ import { BookOpen, SkipForward } from 'lucide-react';
 import { useMagic } from '../../app/store';
 import { IntroDirector } from '../../animations/cameraTimelines/IntroDirector';
 import { eventConfig } from '../../config/eventConfig';
-import { SoundToggle } from '../Audio/SoundControl';
+import { SoundToggle, startSoundFromTap } from '../Audio/SoundControl';
 import { Portrait } from '../ui/Portrait';
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -16,7 +16,7 @@ export function IntroOverlay() {
       {showBook && <div className="intro-shade" />}
       <div className="ui" style={{ position: 'absolute', top: 'max(14px, env(safe-area-inset-top))', right: 14, display: 'flex', gap: 8 }}>
         <SoundToggle compact />
-        <button type="button" className="btn btn-ghost" onClick={() => IntroDirector.skip()} data-testid="skip-intro" style={{ background: 'rgba(255,255,255,.75)' }}>
+        <button type="button" className="btn btn-ghost" onClick={() => { startSoundFromTap(); IntroDirector.skip(); }} data-testid="skip-intro" style={{ background: 'rgba(255,255,255,.75)' }}>
           <SkipForward size={18} aria-hidden="true" /> Skip intro
         </button>
       </div>
@@ -46,7 +46,7 @@ export function IntroOverlay() {
                 </motion.span>
               ))}
             </h1>
-            <button type="button" className="btn btn-primary shimmer" onClick={() => IntroDirector.openBook()} data-testid="open-book" autoFocus style={{ fontSize: '1.05rem', padding: '1em 1.8em', letterSpacing: '0.08em' }}>
+            <button type="button" className="btn btn-primary shimmer" onClick={() => { startSoundFromTap(); IntroDirector.openBook(); }} data-testid="open-book" autoFocus style={{ fontSize: '1.05rem', padding: '1em 1.8em', letterSpacing: '0.08em' }}>
               <BookOpen size={20} aria-hidden="true" /> OPEN THE MAGIC BOOK
             </button>
           </motion.div>
@@ -85,7 +85,7 @@ export function IntroOverlay() {
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.4, duration: 1 }} style={{ fontSize: '1.05rem', margin: '16px 0 22px', textShadow: '0 1px 12px rgba(60,30,80,.6)' }}>
                 {eventConfig.dateLabel} at {eventConfig.timeLabel}
               </motion.p>
-              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.6 }} type="button" className="btn btn-primary" onClick={() => IntroDirector.enterMain()} data-testid="enter-main">
+              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.6 }} type="button" className="btn btn-primary" onClick={() => { startSoundFromTap(); IntroDirector.enterMain(); }} data-testid="enter-main">
                 Enter the celebration
               </motion.button>
             </div>

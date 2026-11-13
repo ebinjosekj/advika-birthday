@@ -2,7 +2,15 @@
  * Original, fully synthesised soundscape (no audio files, so no licensing questions):
  * wind (filtered noise), flowing water, a soft lydian pad, random glass chimes, and
  * one-shot sparkles. Nothing is created until the visitor turns sound on.
+ *
+ * Background music: "Advika's Waltz", an original music-box lullaby in D major
+ * (rendered by scripts/compose-music.py, so it is ours to use). It is only
+ * downloaded once sound is switched on, streams through a plain <audio> element
+ * (no big decoded buffer in memory), and the ambient pad and random chimes step
+ * back while it plays so nothing clashes.
  */
+const MUSIC_URL = `${import.meta.env.BASE_URL}audio/advika-waltz.mp3`;
+const MUSIC_LEVEL = 0.55;
 type Sfx = 'sparkle' | 'bookOpen' | 'fairy' | 'doors' | 'reveal' | 'pop' | 'secret' | 'chime';
 
 const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
@@ -17,6 +25,9 @@ class AudioEngine {
   private enabled = false;
   private volume = 0.6;
   private waterLevel = 0.3;
+    private music: HTMLAudioElement | null = null;
+  private musicGain: GainNode | null = null;
+  private pauseTimer: number | null = null;
 
   get isEnabled() {
     return this.enabled;
@@ -107,7 +118,7 @@ class AudioEngine {
     padF.type = 'lowpass';
     padF.frequency.value = 900;
     const padG = ctx.createGain();
-    padG.gain.value = 0.045;
+    padG.gain.value = 0.012; // the waltz carries the harmony; the pad is just air underneath
     [146.83, 220, 277.18, 329.63, 415.3].forEach((f, i) => {
       const o = ctx.createOscillator();
       o.type = i % 2 ? 'triangle' : 'sine';
@@ -123,7 +134,47 @@ class AudioEngine {
     padLfo.connect(padAmt).connect(padF.frequency);
     padLfo.start();
     padF.connect(padG).connect(rvIn);
+    this.buildMusic(ctx, master);
+    // pause everything while the tab is in the background (phones especially)
+    document.addEventListener('visibilitychange', () => {
+      if (!this.enabled || !this.ctx) return;
+      if (document.hidden) {
+        this.music?.pause();
+        void this.ctx.suspend();
+      } else {
+        void this.ctx.resume();
+        void this.music?.play().catch(() => undefined);
+      }
+    });
     return true;
+  }
+
+  private buildMusic(ctx: AudioContext, master: GainNode) {
+    try {
+      const el = new Audio();
+      el.src = MUSIC_URL;
+      el.loop = true;
+      el.preload = 'auto';
+      el.setAttribute('playsinline', '');
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      ctx.createMediaElementSource(el).connect(g).connect(master);
+      this.music = el;
+      this.musicGain = g;
+    } catch {
+      this.music = null; // ambience and sound effects still work without it
+    }
+  }
+
+  private startMusic() {
+    const el = this.music;
+    if (!el || !this.ctx || !this.musicGain) return;
+    if (this.pauseTimer !== null) clearTimeout(this.pauseTimer);
+    this.pauseTimer = null;
+    // must be called inside the tap that enabled sound (iOS/Safari autoplay rules)
+    void el.play().catch(() => undefined);
+    this.musicGain.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.musicGain.gain.setTargetAtTime(MUSIC_LEVEL, this.ctx.currentTime, 1.2);
   }
 
   private bell(freq: number, when: number, gain = 0.08, decay = 2.4) {
@@ -152,9 +203,9 @@ class AudioEngine {
       const n = 1 + Math.floor(Math.random() * 3);
       for (let i = 0; i < n; i++) {
         const st = PENTA[Math.floor(Math.random() * PENTA.length)];
-        this.bell(base * Math.pow(2, st / 12), this.ctx.currentTime + i * 0.18, 0.03 + Math.random() * 0.02, 3);
+        this.bell(base * Math.pow(2, st / 12), this.ctx.currentTime + i * 0.18, (0.03 + Math.random() * 0.02) * (this.music ? 0.4 : 1), 3);
       }
-      this.chimeTimer = window.setTimeout(tick, 2600 + Math.random() * 4200);
+      this.chimeTimer = window.setTimeout(tick, (this.music ? 3 : 1) * (2600 + Math.random() * 4200));
     };
     this.chimeTimer = window.setTimeout(tick, 1200);
   }
@@ -167,6 +218,7 @@ class AudioEngine {
     this.enabled = true;
     this.master!.gain.cancelScheduledValues(this.ctx!.currentTime);
     this.master!.gain.setTargetAtTime(this.volume * 0.8, this.ctx!.currentTime, 0.6);
+    this.startMusic();
     if (this.chimeTimer === null) this.scheduleChimes();
     return true;
   }
@@ -178,8 +230,12 @@ class AudioEngine {
     if (!this.ctx || !this.master) return;
     const ctx = this.ctx;
     this.master.gain.setTargetAtTime(0, ctx.currentTime, 0.35);
-    window.setTimeout(() => {
-      if (!this.enabled) void ctx.suspend();
+    this.musicGain?.gain.setTargetAtTime(0, ctx.currentTime, 0.35);
+    this.pauseTimer = window.setTimeout(() => {
+      this.pauseTimer = null;
+      if (this.enabled) return;
+      this.music?.pause();
+      void ctx.suspend();
     }, 1800);
   }
 

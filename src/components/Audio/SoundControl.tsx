@@ -3,10 +3,24 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { useMagic } from '../../app/store';
 import { audio } from '../../services/audioEngine';
 
+let userChoseSound = false;
+
+/**
+ * Called from the intro's big buttons. Browsers only allow sound after a tap, and
+ * "Open the magic book" is the natural moment for the music to begin. If the guest
+ * has already used the speaker button themselves, their choice wins.
+ */
+export function startSoundFromTap() {
+  const s = useMagic.getState();
+  if (userChoseSound || s.soundOn) return;
+  void audio.enable(s.volume).then((ok) => useMagic.getState().setSound(ok));
+}
+
 export function SoundToggle({ compact = false }: { compact?: boolean }) {
   const on = useMagic((s) => s.soundOn);
   const volume = useMagic((s) => s.volume);
   const toggle = async () => {
+    userChoseSound = true;
     if (on) {
       audio.disable();
       useMagic.getState().setSound(false);
